@@ -1,13 +1,14 @@
 import sys
 import getopt
 import logging
-from logging import info, error
+from logging import error
 
-from proxy import flask_server
+from modelservice import proxy
+
 
 def print_usage():
-    print("USAGE\n\tpython3 proxy [OPTIONS]\n")
-    print("OPTIONS\n\t--flaskserver <master_hostname>\tStarts the flask server, connecting to the master specified\n")
+    print("USAGE\n\tpython3.8 modelservice [OPTIONS]\n")
+    print("OPTIONS\n\t--proxy <master_hostname>\tStarts the Flask server, connecting to the master specified\n")
 
 
 def print_usage_and_exit():
@@ -20,32 +21,29 @@ def main():
 
     argv = sys.argv[1:]
     try:
-        opts, args = getopt.getopt(argv, "mwfp:u:l", ["flaskserver", "port=", "master_uri=", "local"])
+        opts, args = getopt.getopt(argv, "mwfp:u:", ["proxy", "port=", "master_uri="])
 
         node_type_arg = None
         port_arg = None
         master_uri_arg = None
-        local_testing = False
 
         for opt, arg in opts:
-            if opt in ['-f', '--flaskserver']:
+            if opt in ['-f', '--proxy']:
                 node_type_arg = "flaskserver"
             elif opt in ['--master_uri']:
                 master_uri_arg = arg
             elif opt in ['-p', '--port']:
                 port_arg = int(arg)
-            elif opt in ['-l', '--local']:
-                local_testing = True
 
         if node_type_arg == "flaskserver":
             ok, master_hostname, master_port = is_valid_master_uri(master_uri_arg)
             if ok:
                 if port_arg is not None:
-                    flask_server.run(master_hostname, master_port, port_arg)
+                    proxy.run(master_hostname, master_port, port_arg)
                 else:
-                    flask_server.run(master_hostname, master_port)
+                    proxy.run(master_hostname, master_port)
             else:
-                flask_server.run()
+                proxy.run()
 
     except Exception as e:
         print(f"Error: {e}")

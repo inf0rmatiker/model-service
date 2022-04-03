@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+// --------- Service Definitions ----------
+
+service Master {
+
+  // Creates individual BuildModels requests for workers, tracking the job
+  rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
+
+  // Queries the built models by spatial extent
+  rpc GetModels (GetModelsRequest) returns (GetModelsResponse) {}
+
+  // Registers a Worker to track
+  rpc RegisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
+
+  // De-registers a Worker from tracking
+  rpc DeregisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
+}
+
+service Worker {
+
+  // Builds models at the worker level by training/testing on queried data
+  rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
+
+  // Queries the local built models at the worker level
+  rpc GetModels (GetModelsRequest) returns (GetModelsResponse) {}
+}
+
+// --------- Message Definitions ----------
+
+message BuildModelsRequest {
+
+}
+
+message BuildModelsResponse {
+
+}
+
+message GetModelsRequest {
+
+}
+
+message GetModelsResponse {
+
+}
+
+message WorkerRegistrationRequest {
+  string hostname = 1;
+  int32 port = 2;
+}
+
+message WorkerRegistrationResponse {
+  bool success = 1;
+}
+
+// --------- Enum Definitions ----------
