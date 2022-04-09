@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x12modelservice.proto\"\x14\n\x12\x42uildModelsRequest\"\x15\n\x13\x42uildModelsResponse\"\x12\n\x10GetModelsRequest\"\x13\n\x11GetModelsResponse\"\x1b\n\x19WorkerRegistrationRequest\"\x1c\n\x1aWorkerRegistrationResponse2\x96\x02\n\x06Master\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x34\n\tGetModels\x12\x11.GetModelsRequest\x1a\x12.GetModelsResponse\"\x00\x12K\n\x0eRegisterWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x12M\n\x10\x44\x65registerWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x32z\n\x06Worker\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x34\n\tGetModels\x12\x11.GetModelsRequest\x1a\x12.GetModelsResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x12modelservice.proto\"\x14\n\x12\x42uildModelsRequest\"\x15\n\x13\x42uildModelsResponse\"6\n\x0fGetModelRequest\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x11\n\tgis_joins\x18\x02 \x01(\t\"D\n\x10GetModelResponse\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\";\n\x19WorkerRegistrationRequest\x12\x10\n\x08hostname\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\"-\n\x1aWorkerRegistrationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x94\x02\n\x06Master\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x32\n\tGetModels\x12\x10.GetModelRequest\x1a\x11.GetModelResponse\"\x00\x12K\n\x0eRegisterWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x12M\n\x10\x44\x65registerWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x32x\n\x06Worker\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x32\n\tGetModels\x12\x10.GetModelRequest\x1a\x11.GetModelResponse\"\x00\x62\x06proto3'
 )
 
 
@@ -75,14 +75,28 @@ _BUILDMODELSRESPONSE = _descriptor.Descriptor(
 )
 
 
-_GETMODELSREQUEST = _descriptor.Descriptor(
-  name='GetModelsRequest',
-  full_name='GetModelsRequest',
+_GETMODELREQUEST = _descriptor.Descriptor(
+  name='GetModelRequest',
+  full_name='GetModelRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='model_id', full_name='GetModelRequest.model_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='gis_joins', full_name='GetModelRequest.gis_joins', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -96,18 +110,39 @@ _GETMODELSREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=67,
-  serialized_end=85,
+  serialized_end=121,
 )
 
 
-_GETMODELSRESPONSE = _descriptor.Descriptor(
-  name='GetModelsResponse',
-  full_name='GetModelsResponse',
+_GETMODELRESPONSE = _descriptor.Descriptor(
+  name='GetModelResponse',
+  full_name='GetModelResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='model_id', full_name='GetModelResponse.model_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='filename', full_name='GetModelResponse.filename', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='data', full_name='GetModelResponse.data', index=2,
+      number=3, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -120,8 +155,8 @@ _GETMODELSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=87,
-  serialized_end=106,
+  serialized_start=123,
+  serialized_end=191,
 )
 
 
@@ -133,6 +168,20 @@ _WORKERREGISTRATIONREQUEST = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='hostname', full_name='WorkerRegistrationRequest.hostname', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='port', full_name='WorkerRegistrationRequest.port', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -145,8 +194,8 @@ _WORKERREGISTRATIONREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=108,
-  serialized_end=135,
+  serialized_start=193,
+  serialized_end=252,
 )
 
 
@@ -158,6 +207,13 @@ _WORKERREGISTRATIONRESPONSE = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='success', full_name='WorkerRegistrationResponse.success', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -170,14 +226,14 @@ _WORKERREGISTRATIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=137,
-  serialized_end=165,
+  serialized_start=254,
+  serialized_end=299,
 )
 
 DESCRIPTOR.message_types_by_name['BuildModelsRequest'] = _BUILDMODELSREQUEST
 DESCRIPTOR.message_types_by_name['BuildModelsResponse'] = _BUILDMODELSRESPONSE
-DESCRIPTOR.message_types_by_name['GetModelsRequest'] = _GETMODELSREQUEST
-DESCRIPTOR.message_types_by_name['GetModelsResponse'] = _GETMODELSRESPONSE
+DESCRIPTOR.message_types_by_name['GetModelRequest'] = _GETMODELREQUEST
+DESCRIPTOR.message_types_by_name['GetModelResponse'] = _GETMODELRESPONSE
 DESCRIPTOR.message_types_by_name['WorkerRegistrationRequest'] = _WORKERREGISTRATIONREQUEST
 DESCRIPTOR.message_types_by_name['WorkerRegistrationResponse'] = _WORKERREGISTRATIONRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -196,19 +252,19 @@ BuildModelsResponse = _reflection.GeneratedProtocolMessageType('BuildModelsRespo
   })
 _sym_db.RegisterMessage(BuildModelsResponse)
 
-GetModelsRequest = _reflection.GeneratedProtocolMessageType('GetModelsRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETMODELSREQUEST,
+GetModelRequest = _reflection.GeneratedProtocolMessageType('GetModelRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETMODELREQUEST,
   '__module__' : 'modelservice_pb2'
-  # @@protoc_insertion_point(class_scope:GetModelsRequest)
+  # @@protoc_insertion_point(class_scope:GetModelRequest)
   })
-_sym_db.RegisterMessage(GetModelsRequest)
+_sym_db.RegisterMessage(GetModelRequest)
 
-GetModelsResponse = _reflection.GeneratedProtocolMessageType('GetModelsResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETMODELSRESPONSE,
+GetModelResponse = _reflection.GeneratedProtocolMessageType('GetModelResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETMODELRESPONSE,
   '__module__' : 'modelservice_pb2'
-  # @@protoc_insertion_point(class_scope:GetModelsResponse)
+  # @@protoc_insertion_point(class_scope:GetModelResponse)
   })
-_sym_db.RegisterMessage(GetModelsResponse)
+_sym_db.RegisterMessage(GetModelResponse)
 
 WorkerRegistrationRequest = _reflection.GeneratedProtocolMessageType('WorkerRegistrationRequest', (_message.Message,), {
   'DESCRIPTOR' : _WORKERREGISTRATIONREQUEST,
@@ -233,8 +289,8 @@ _MASTER = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=168,
-  serialized_end=446,
+  serialized_start=302,
+  serialized_end=578,
   methods=[
   _descriptor.MethodDescriptor(
     name='BuildModels',
@@ -251,8 +307,8 @@ _MASTER = _descriptor.ServiceDescriptor(
     full_name='Master.GetModels',
     index=1,
     containing_service=None,
-    input_type=_GETMODELSREQUEST,
-    output_type=_GETMODELSRESPONSE,
+    input_type=_GETMODELREQUEST,
+    output_type=_GETMODELRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
@@ -289,8 +345,8 @@ _WORKER = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=448,
-  serialized_end=570,
+  serialized_start=580,
+  serialized_end=700,
   methods=[
   _descriptor.MethodDescriptor(
     name='BuildModels',
@@ -307,8 +363,8 @@ _WORKER = _descriptor.ServiceDescriptor(
     full_name='Worker.GetModels',
     index=1,
     containing_service=None,
-    input_type=_GETMODELSREQUEST,
-    output_type=_GETMODELSRESPONSE,
+    input_type=_GETMODELREQUEST,
+    output_type=_GETMODELRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

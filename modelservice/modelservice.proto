@@ -8,7 +8,7 @@ service Master {
   rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
 
   // Queries the built models by spatial extent
-  rpc GetModels (GetModelsRequest) returns (GetModelsResponse) {}
+  rpc GetModels (GetModelRequest) returns (GetModelResponse) {}
 
   // Registers a Worker to track
   rpc RegisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
@@ -23,25 +23,28 @@ service Worker {
   rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
 
   // Queries the local built models at the worker level
-  rpc GetModels (GetModelsRequest) returns (GetModelsResponse) {}
+  rpc GetModels (GetModelRequest) returns (GetModelResponse) {}
 }
 
 // --------- Message Definitions ----------
 
 message BuildModelsRequest {
-
+  //
 }
 
 message BuildModelsResponse {
-
+  //
 }
 
-message GetModelsRequest {
-
+message GetModelRequest {
+  string model_id = 1;
+  string gis_joins = 2;
 }
 
-message GetModelsResponse {
-
+message GetModelResponse {
+  string model_id = 1;
+  string filename = 2;
+  bytes data = 3;
 }
 
 message WorkerRegistrationRequest {
@@ -52,5 +55,6 @@ message WorkerRegistrationRequest {
 message WorkerRegistrationResponse {
   bool success = 1;
 }
+
 
 // --------- Enum Definitions ----------

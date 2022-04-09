@@ -13,6 +13,11 @@ def run(master_hostname="localhost", master_port=50051, flask_port=5000):
 
 @app.route("/model", methods=["GET"])
 def get_model():
+
+    # TODO Parse query from HTTP JSON -> build gRPC request to Master
+
+    # TODO Send gRPC request to master and relay response back to client
+
     return "At some point, your model will be returned from this endpoint"
 
 
@@ -20,5 +25,9 @@ def get_model():
 def submit_job():
     request_data: str = request.json
     print(f"request_data: {request_data}")
+
+    # TODO Parse query from HTTP JSON -> build gRPC request to Master
+
+    # TODO Send gRPC request to master and relay response back to client
 
     return "At some point, your job will be submitted"

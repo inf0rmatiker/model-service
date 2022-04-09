@@ -6,7 +6,7 @@ from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info
 
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelsRequest, GetModelsResponse
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -21,13 +21,16 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
     def deregister(self):
         info("Deregistering...")  # TODO
 
+    def register(self):
+        info("Registering...")  # TODO
+
     def BuildModels(self, request: BuildModelsRequest, context):
         info(f"Received request to build models")
         return BuildModelsResponse()
 
-    def GetModels(self, request: GetModelsRequest, context):
+    def GetModels(self, request: GetModelRequest, context):
         info(f"Received request to retrieve model(s)")
-        return GetModelsResponse()
+        return GetModelResponse()
 
 
 def shutdown_gracefully(worker: Worker) -> None:

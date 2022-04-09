@@ -23,8 +23,8 @@ class MasterStub(object):
                 )
         self.GetModels = channel.unary_unary(
                 '/Master/GetModels',
-                request_serializer=modelservice__pb2.GetModelsRequest.SerializeToString,
-                response_deserializer=modelservice__pb2.GetModelsResponse.FromString,
+                request_serializer=modelservice__pb2.GetModelRequest.SerializeToString,
+                response_deserializer=modelservice__pb2.GetModelResponse.FromString,
                 )
         self.RegisterWorker = channel.unary_unary(
                 '/Master/RegisterWorker',
@@ -81,8 +81,8 @@ def add_MasterServicer_to_server(servicer, server):
             ),
             'GetModels': grpc.unary_unary_rpc_method_handler(
                     servicer.GetModels,
-                    request_deserializer=modelservice__pb2.GetModelsRequest.FromString,
-                    response_serializer=modelservice__pb2.GetModelsResponse.SerializeToString,
+                    request_deserializer=modelservice__pb2.GetModelRequest.FromString,
+                    response_serializer=modelservice__pb2.GetModelResponse.SerializeToString,
             ),
             'RegisterWorker': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterWorker,
@@ -135,8 +135,8 @@ class Master(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Master/GetModels',
-            modelservice__pb2.GetModelsRequest.SerializeToString,
-            modelservice__pb2.GetModelsResponse.FromString,
+            modelservice__pb2.GetModelRequest.SerializeToString,
+            modelservice__pb2.GetModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -191,8 +191,8 @@ class WorkerStub(object):
                 )
         self.GetModels = channel.unary_unary(
                 '/Worker/GetModels',
-                request_serializer=modelservice__pb2.GetModelsRequest.SerializeToString,
-                response_deserializer=modelservice__pb2.GetModelsResponse.FromString,
+                request_serializer=modelservice__pb2.GetModelRequest.SerializeToString,
+                response_deserializer=modelservice__pb2.GetModelResponse.FromString,
                 )
 
 
@@ -223,8 +223,8 @@ def add_WorkerServicer_to_server(servicer, server):
             ),
             'GetModels': grpc.unary_unary_rpc_method_handler(
                     servicer.GetModels,
-                    request_deserializer=modelservice__pb2.GetModelsRequest.FromString,
-                    response_serializer=modelservice__pb2.GetModelsResponse.SerializeToString,
+                    request_deserializer=modelservice__pb2.GetModelRequest.FromString,
+                    response_serializer=modelservice__pb2.GetModelResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -265,7 +265,7 @@ class Worker(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Worker/GetModels',
-            modelservice__pb2.GetModelsRequest.SerializeToString,
-            modelservice__pb2.GetModelsResponse.FromString,
+            modelservice__pb2.GetModelRequest.SerializeToString,
+            modelservice__pb2.GetModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

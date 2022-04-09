@@ -5,7 +5,7 @@ from logging import info, error
 
 from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import WorkerRegistrationRequest, WorkerRegistrationResponse, BuildModelsRequest, \
-    GetModelsRequest, GetModelsResponse, BuildModelsResponse
+    GetModelRequest, GetModelResponse, BuildModelsResponse
 
 
 # Master Service
@@ -26,9 +26,9 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         info(f"Received request to build models")
         return BuildModelsResponse()
 
-    def GetModels(self, request: GetModelsRequest, context):
+    def GetModels(self, request: GetModelRequest, context):
         info(f"Received request to retrieve model(s)")
-        return GetModelsResponse()
+        return GetModelResponse()
 
 
 def run(master_port=50051):
