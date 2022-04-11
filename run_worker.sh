@@ -1,8 +1,8 @@
 #!/bin/bash
 
 function print_usage {
-  echo -e "./run_worker.sh <master_uri> <worker_port>"
-  echo -e "EXAMPLE ./run_worker.sh master:50051 5000"
+  echo -e "./run_worker.sh <master_uri> <worker_port> <data_dir>"
+  echo -e "EXAMPLE ./run_worker.sh master:50051 5000 /absolute/path/to/data"
 }
 
 if [[ $# -eq 2 ]]; then
@@ -12,7 +12,8 @@ if [[ $# -eq 2 ]]; then
 
   MASTER_URI=$1
   WORKER_PORT=$2
-  python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT"
+  $DATA_DIR=$3
+  python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT" --data_dir="$DATA_DIR"
 
 else
   print_usage

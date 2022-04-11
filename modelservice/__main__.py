@@ -29,11 +29,12 @@ def main():
     argv = sys.argv[1:]
     try:
 
-        opts, args = getopt.getopt(argv, "mwfp:u:", ["master", "worker", "proxy", "port=", "master_uri="])
+        opts, args = getopt.getopt(argv, "mwfp:u:", ["master", "worker", "proxy", "port=", "master_uri=", "data_dir="])
 
         node_type_arg = None
         port_arg = None
         master_uri_arg = None
+        data_dir = None
 
         for opt, arg in opts:
             if opt in ['-m', '--master']:
@@ -46,6 +47,8 @@ def main():
                 master_uri_arg = arg
             elif opt in ['-p', '--port']:
                 port_arg = int(arg)
+            elif opt in ['-d', '--data_dir']:
+                data_dir = arg
 
         if node_type_arg == "master":
             master.run(master_port=port_arg) if port_arg is not None else master.run()
@@ -64,9 +67,9 @@ def main():
             ok, master_hostname, master_port = is_valid_master_uri(master_uri_arg)
             if ok:
                 if port_arg is not None:
-                    worker.run(master_hostname, master_port, port_arg)
+                    worker.run(master_hostname, master_port, port_arg, data_dir)
                 else:
-                    worker.run(master_hostname, master_port)
+                    worker.run(master_hostname, master_port, data_dir=data_dir)
             else:
                 worker.run()
 
@@ -76,10 +79,8 @@ def main():
 
 
 def is_valid_master_uri(uri):
-    print(f"uri: {uri}")
     if uri is not None and uri != "":
         if ":" in uri:
-            print("uri has :")
             parts = uri.split(":")
             if len(parts) == 2:
                 hostname = parts[0]
