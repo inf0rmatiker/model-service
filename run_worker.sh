@@ -12,7 +12,7 @@ if [[ $# -eq 2 ]]; then
 
   MASTER_URI=$1
   WORKER_PORT=$2
-  $DATA_DIR=$3
+  DATA_DIR=$3
   python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT" --data_dir="$DATA_DIR"
 
 else

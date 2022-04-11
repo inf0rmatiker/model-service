@@ -6,7 +6,7 @@ from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info
 
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, GisJoinMetadata
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
