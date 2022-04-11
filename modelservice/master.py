@@ -10,7 +10,7 @@ from modelservice.modelservice_pb2 import WorkerRegistrationRequest, WorkerRegis
 
 class WorkerMetadata:
 
-    def __init__(self, hostname, port, shard):
+    def __init__(self, hostname, port):
         self.hostname = hostname
         self.port = port
 
@@ -21,6 +21,7 @@ class WorkerMetadata:
 # Master Service
 class Master(modelservice_pb2_grpc.MasterServicer):
 
+    # def __init__(self, hostname: str = "localhost", port: int = 50051):
     def __init__(self, hostname: str, port: int):
         super(Master, self).__init__()
         self.hostname = hostname
