@@ -58,6 +58,17 @@ message GisJoinMetadata {
   string gis_join = 1;
 }
 
+message IncrementalVarianceBudget {
+  int64 total_budget = 1; // Total budget
+  int64 initial_allocation = 2; // Initial equal allocation for all GISJOINs
+}
+
+message StaticBudget {
+  int64 total_limit = 1; // Gets translated into a equal-proportion limit on each GISJOIN
+  int64 strata_limit = 2; // Specifies a limit each GISJOIN
+  float sample_rate = 3; // Specifies a fixed sampling rate for each GISJOIN
+}
+
 message ValidationBudget {
   BudgetType budget_type = 1;
   StaticBudget static_budget = 2;
@@ -77,6 +88,12 @@ message WorkerRegistrationResponse {
 
 // --------- Enum Definitions ----------
 
+
+enum BudgetType {
+  DEFAULT_BUDGET = 0;
+  STATIC_BUDGET = 1;
+  INCREMENTAL_VARIANCE_BUDGET = 2;
+}
 
 enum LossFunction {
   MEAN_SQUARED_ERROR = 0;
