@@ -45,7 +45,7 @@ class Master(modelservice_pb2_grpc.MasterServicer):
 
         # Loop through list of GIS joins and store their ID and metadata about worker that is hosting them
         for local_gis_join in request.local_gis_joins:
-            info(f"Worker at hostname={request.hostname}, port={request.port} has gis join={local_gis_join}")
+            info(f"Worker at hostname={request.hostname}, port={request.port} has gis join={local_gis_join.gis_join}")
             self.gis_join_locations[local_gis_join.gis_join] = worker
 
         return WorkerRegistrationResponse(success=True)
