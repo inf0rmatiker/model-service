@@ -4,20 +4,18 @@ import getopt
 import logging
 from logging import error
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
-sys.path.insert(0, parent_dir_path)
-
 from modelservice import master
 from modelservice import proxy
-
+from modelservice import worker
 
 def print_usage():
     print("USAGE\n\tpython3.8 modelservice [OPTIONS]\n")
-    print("OPTIONS\n\t--master <master_port>\t\tStarts the master server")
+    print("OPTIONS\n\t--master <master_port>\t\t\tStarts the master server")
     print("\tExample: python3.8 modelservice --master 50051\n")
-    print("OPTIONS\n\t--proxy <master_hostname>\tStarts the Flask server, connecting to the master specified\n")
-    print("\tExample: python3.8 modelservice --flaskserver lattice-150:50051 5000\n")
+    print("\t--proxy <master_uri> <proxy_port>\tStarts the Flask server (proxy), connecting to the master specified")
+    print("\tExample: python3.8 modelservice --proxy antlion:50051 5000\n")
+    print("\t--worker <master_uri> <worker_port>\tStarts the Worker server, connecting to the master specified")
+    print("\tExample: python3.8 modelservice --worker antlion:50051 50055\n")
 
 
 def print_usage_and_exit():
@@ -30,7 +28,8 @@ def main():
 
     argv = sys.argv[1:]
     try:
-        opts, args = getopt.getopt(argv, "mwfp:u:", ["proxy", "port=", "master_uri="])
+
+        opts, args = getopt.getopt(argv, "mwfp:u:", ["master", "worker", "proxy", "port=", "master_uri="])
 
         node_type_arg = None
         port_arg = None
@@ -40,7 +39,9 @@ def main():
             if opt in ['-m', '--master']:
                 node_type_arg = "master"
             elif opt in ['-f', '--proxy']:
-                node_type_arg = "flaskserver"
+                node_type_arg = "proxy"
+            elif opt in ['-w', '--worker']:
+                node_type_arg = "worker"
             elif opt in ['--master_uri']:
                 master_uri_arg = arg
             elif opt in ['-p', '--port']:
@@ -49,7 +50,7 @@ def main():
         if node_type_arg == "master":
             master.run(master_port=port_arg) if port_arg is not None else master.run()
 
-        if node_type_arg == "flaskserver":
+        elif node_type_arg == "proxy":
             ok, master_hostname, master_port = is_valid_master_uri(master_uri_arg)
             if ok:
                 if port_arg is not None:
@@ -58,6 +59,16 @@ def main():
                     proxy.run(master_hostname, master_port)
             else:
                 proxy.run()
+
+        elif node_type_arg == "worker":
+            ok, master_hostname, master_port = is_valid_master_uri(master_uri_arg)
+            if ok:
+                if port_arg is not None:
+                    worker.run(master_hostname, master_port, port_arg)
+                else:
+                    worker.run(master_hostname, master_port)
+            else:
+                worker.run()
 
     except Exception as e:
         print(f"Error: {e}")

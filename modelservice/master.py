@@ -66,9 +66,9 @@ def run(master_port=50051):
 
     # Initialize server and master
     server = grpc.server(ThreadPoolExecutor(max_workers=10))
-    master = Master()
-    modelservice_pb2_grpc.add_MasterServicer_to_server(master, server)
     hostname = socket.gethostname()
+    master = Master(hostname, master_port)
+    modelservice_pb2_grpc.add_MasterServicer_to_server(master, server)
 
     # Start the server
     info(f"Starting master server on {hostname}:{master_port}")
