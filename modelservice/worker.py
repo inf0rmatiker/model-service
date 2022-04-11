@@ -41,7 +41,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                     gis_join=gis_join
                 ))
 
-            stub = validation_pb2_grpc.MasterStub(channel)
+            stub = modelservice_pb2_grpc.MasterStub(channel)
             registration_response: WorkerRegistrationResponse = stub.RegisterWorker(
                 WorkerRegistrationRequest(
                     hostname=self.hostname,
