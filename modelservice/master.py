@@ -39,7 +39,7 @@ class Master(modelservice_pb2_grpc.MasterServicer):
 
         # Create a WorkerMetadata object for tracking
         worker: WorkerMetadata = WorkerMetadata(request.hostname, request.port)
-        # info(f"Successfully added Worker: {worker}, responsible for {len(shard.gis_join_metadata)} GISJOINs")
+        info(f"Successfully added Worker: {worker}, responsible for {len(request.local_gis_joins)} GISJOINs")
         # Add worker metadata to tracked_workers map for easy reference later
         self.tracked_workers[request.hostname] = worker
 
