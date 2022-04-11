@@ -5,7 +5,7 @@ function print_usage {
   echo -e "EXAMPLE ./run_worker.sh master:50051 5000 /absolute/path/to/data"
 }
 
-if [[ $# -eq 2 ]]; then
+if [[ $# -eq 3 ]]; then
 
   WORKER_PROCESSES=$(ps -aux | grep "[m]odelservice --worker")
   [ "$WORKER_PROCESSES" != "" ] && echo -e "Found worker processes running!\n$WORKER_PROCESSES\nPlease kill first before starting." && exit 1
