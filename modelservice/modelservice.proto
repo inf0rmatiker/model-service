@@ -29,7 +29,14 @@ service Worker {
 // --------- Message Definitions ----------
 
 message BuildModelsRequest {
-  //
+  string id = 1;
+  ModelFramework model_framework = 2;
+  ModelCategory model_category = 3;
+  repeated string feature_fields = 4;
+  string label_field = 5;
+  bool normalize_inputs = 6;
+  ValidationBudget validation_budget = 7;
+  LossFunction loss_function = 8;
 }
 
 message BuildModelsResponse {
@@ -47,14 +54,20 @@ message GetModelResponse {
   bytes data = 3;
 }
 
+message GisJoinMetadata {
+  string gis_join = 1;
+}
+
+message ValidationBudget {
+  BudgetType budget_type = 1;
+  StaticBudget static_budget = 2;
+  IncrementalVarianceBudget variance_budget = 3;
+}
+
 message WorkerRegistrationRequest {
   string hostname = 1;
   int32 port = 2;
   repeated GisJoinMetadata local_gis_joins = 3;
-}
-
-message GisJoinMetadata {
-  string gis_join = 1;
 }
 
 message WorkerRegistrationResponse {
@@ -63,3 +76,22 @@ message WorkerRegistrationResponse {
 
 
 // --------- Enum Definitions ----------
+
+
+enum LossFunction {
+  MEAN_SQUARED_ERROR = 0;
+  MEAN_ABSOLUTE_ERROR = 1;
+  ROOT_MEAN_SQUARED_ERROR = 2;
+  NEGATIVE_LOG_LIKELIHOOD_LOSS = 3;
+  CROSS_ENTROPY_LOSS = 4;
+}
+
+enum ModelCategory {
+  REGRESSION = 0;
+}
+
+enum ModelFramework {
+  TENSORFLOW = 0;
+  SCIKIT_LEARN = 1;
+  PYTORCH = 2;
+}
