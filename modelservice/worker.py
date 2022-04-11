@@ -31,6 +31,10 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         info("Gathering GIS info")
 
         # Use data_dir to get list of all GIS joins on this server
+        for file in os.listdir(self.data_dir):
+            if file.endswith(".csv"):
+                nameParts = file.split(".")
+                self.local_gis_joins.append(nameParts[0])
 
         info("Registering...")
         # Send WorkerRegistrationRequest to master
