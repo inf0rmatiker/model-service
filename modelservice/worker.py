@@ -20,7 +20,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         self.port = port
         self.data_dir = data_dir
         self.is_registered = False
-        self.local_gis_joins: list = ["80212", "80015"]
+        self.local_gis_joins: list = []
 
         # Register with master
         self.register()
