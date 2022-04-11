@@ -6,7 +6,7 @@ from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info
 
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, GisJoinMetadata
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -18,6 +18,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         self.hostname = hostname
         self.port = port
         self.data_dir = data_dir
+        self.is_registered = False
         self.local_gis_joins: list = ["80212", "80015"]
 
         # Register with master
