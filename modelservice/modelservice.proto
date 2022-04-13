@@ -40,7 +40,29 @@ message BuildModelsRequest {
 }
 
 message BuildModelsResponse {
-  //
+  string id = 1;
+  bool ok = 2;
+  string error_msg = 3;
+  double duration_sec = 4;
+  repeated WorkerValidationJobResponse worker_responses = 5;
+}
+
+message WorkerValidationJobResponse {
+  bool ok = 1;
+  string hostname = 2;
+  double duration_sec = 3;
+  repeated ValidationMetric metrics = 4;
+}
+
+message ValidationMetric {
+  string gis_join = 1;
+  int64  allocation = 2;
+  double loss = 3;
+  double accuracy = 4;
+  double variance = 5;
+  double duration_sec = 6;
+  bool ok = 7;
+  string error_msg = 8;
 }
 
 message GetModelRequest {
