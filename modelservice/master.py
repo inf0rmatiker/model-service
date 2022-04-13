@@ -52,7 +52,15 @@ class Master(modelservice_pb2_grpc.MasterServicer):
 
     def DeregisterWorker(self, request, context):
         info(f"Received request to deregister worker: hostname={request.hostname}, port={request.port}")
-        return WorkerRegistrationResponse(success=True)
+
+        if self.is_worker_registered(request.hostname):
+            info(f"Worker {request.hostname} is registered. Removing...")
+            del self.tracked_workers[request.hostname]
+            info(f"Worker {request.hostname} is now deregistered and removed.")
+            return WorkerRegistrationResponse(success=True)
+        else:
+            error(f"Worker {request.hostname} is not registered, can't remove")
+            return WorkerRegistrationResponse(success=False)
 
     def BuildModels(self, request: BuildModelsRequest, context):
         info(f"Received request to build models")

@@ -26,7 +26,23 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         self.register()
 
     def deregister(self):
-        info("Deregistering...")  # TODO
+        info("Deregistering...")
+
+        if self.is_registered:
+            # Deregister Worker from the Master
+            with grpc.insecure_channel(f"{self.master_hostname}:{self.master_port}") as channel:
+                stub = modelservice_pb2_grpc.MasterStub(channel)
+                registration_response: WorkerRegistrationResponse = stub.DeregisterWorker(
+                    WorkerRegistrationRequest(hostname=self.hostname, port=self.port)
+                )
+
+                if registration_response.success:
+                    info(f"Successfully deregistered from master: {registration_response}")
+                    self.is_registered = False
+                else:
+                    error(f"Failed to deregister from master: {registration_response}")
+        else:
+            info("We are not registered, no need to deregister")
 
     def register(self):
         info("Gathering GIS info")
