@@ -5,7 +5,7 @@ import signal
 
 from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from logging import info
+from logging import info, error
 
 from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest
 
@@ -81,7 +81,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         info(f"Received request to build models")
         return BuildModelsResponse()
 
-    def GetModels(self, request: GetModelRequest, context):
+    def GetModel(self, request: GetModelRequest, context):
         info(f"Received request to retrieve model(s)")
         return GetModelResponse()
 

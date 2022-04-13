@@ -66,7 +66,7 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         info(f"Received request to build models")
         return BuildModelsResponse()
 
-    def GetModels(self, request: GetModelRequest, context):
+    def GetModel(self, request: GetModelRequest, context):
         info(f"Received request to retrieve model(s)")
         return GetModelResponse()
 

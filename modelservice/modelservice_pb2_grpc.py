@@ -21,8 +21,8 @@ class MasterStub(object):
                 request_serializer=modelservice__pb2.BuildModelsRequest.SerializeToString,
                 response_deserializer=modelservice__pb2.BuildModelsResponse.FromString,
                 )
-        self.GetModels = channel.unary_unary(
-                '/Master/GetModels',
+        self.GetModel = channel.unary_unary(
+                '/Master/GetModel',
                 request_serializer=modelservice__pb2.GetModelRequest.SerializeToString,
                 response_deserializer=modelservice__pb2.GetModelResponse.FromString,
                 )
@@ -50,7 +50,7 @@ class MasterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetModels(self, request, context):
+    def GetModel(self, request, context):
         """Queries the built models by spatial extent
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -79,8 +79,8 @@ def add_MasterServicer_to_server(servicer, server):
                     request_deserializer=modelservice__pb2.BuildModelsRequest.FromString,
                     response_serializer=modelservice__pb2.BuildModelsResponse.SerializeToString,
             ),
-            'GetModels': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetModels,
+            'GetModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetModel,
                     request_deserializer=modelservice__pb2.GetModelRequest.FromString,
                     response_serializer=modelservice__pb2.GetModelResponse.SerializeToString,
             ),
@@ -124,7 +124,7 @@ class Master(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetModels(request,
+    def GetModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -134,7 +134,7 @@ class Master(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Master/GetModels',
+        return grpc.experimental.unary_unary(request, target, '/Master/GetModel',
             modelservice__pb2.GetModelRequest.SerializeToString,
             modelservice__pb2.GetModelResponse.FromString,
             options, channel_credentials,
@@ -189,8 +189,8 @@ class WorkerStub(object):
                 request_serializer=modelservice__pb2.BuildModelsRequest.SerializeToString,
                 response_deserializer=modelservice__pb2.BuildModelsResponse.FromString,
                 )
-        self.GetModels = channel.unary_unary(
-                '/Worker/GetModels',
+        self.GetModel = channel.unary_unary(
+                '/Worker/GetModel',
                 request_serializer=modelservice__pb2.GetModelRequest.SerializeToString,
                 response_deserializer=modelservice__pb2.GetModelResponse.FromString,
                 )
@@ -206,7 +206,7 @@ class WorkerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetModels(self, request, context):
+    def GetModel(self, request, context):
         """Queries the local built models at the worker level
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -221,8 +221,8 @@ def add_WorkerServicer_to_server(servicer, server):
                     request_deserializer=modelservice__pb2.BuildModelsRequest.FromString,
                     response_serializer=modelservice__pb2.BuildModelsResponse.SerializeToString,
             ),
-            'GetModels': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetModels,
+            'GetModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetModel,
                     request_deserializer=modelservice__pb2.GetModelRequest.FromString,
                     response_serializer=modelservice__pb2.GetModelResponse.SerializeToString,
             ),
@@ -254,7 +254,7 @@ class Worker(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetModels(request,
+    def GetModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -264,7 +264,7 @@ class Worker(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Worker/GetModels',
+        return grpc.experimental.unary_unary(request, target, '/Worker/GetModel',
             modelservice__pb2.GetModelRequest.SerializeToString,
             modelservice__pb2.GetModelResponse.FromString,
             options, channel_credentials,

@@ -8,7 +8,7 @@ service Master {
   rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
 
   // Queries the built models by spatial extent
-  rpc GetModels (GetModelRequest) returns (GetModelResponse) {}
+  rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 
   // Registers a Worker to track
   rpc RegisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
@@ -23,7 +23,7 @@ service Worker {
   rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
 
   // Queries the local built models at the worker level
-  rpc GetModels (GetModelRequest) returns (GetModelResponse) {}
+  rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 }
 
 // --------- Message Definitions ----------

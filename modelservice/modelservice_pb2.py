@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x12modelservice.proto\"\x14\n\x12\x42uildModelsRequest\"\x15\n\x13\x42uildModelsResponse\"6\n\x0fGetModelRequest\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x11\n\tgis_joins\x18\x02 \x01(\t\"D\n\x10GetModelResponse\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"f\n\x19WorkerRegistrationRequest\x12\x10\n\x08hostname\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x12)\n\x0flocal_gis_joins\x18\x03 \x03(\x0b\x32\x10.GisJoinMetadata\"#\n\x0fGisJoinMetadata\x12\x10\n\x08gis_join\x18\x01 \x01(\t\"-\n\x1aWorkerRegistrationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x94\x02\n\x06Master\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x32\n\tGetModels\x12\x10.GetModelRequest\x1a\x11.GetModelResponse\"\x00\x12K\n\x0eRegisterWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x12M\n\x10\x44\x65registerWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x32x\n\x06Worker\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x32\n\tGetModels\x12\x10.GetModelRequest\x1a\x11.GetModelResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x12modelservice.proto\"\x14\n\x12\x42uildModelsRequest\"\x15\n\x13\x42uildModelsResponse\"6\n\x0fGetModelRequest\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x11\n\tgis_joins\x18\x02 \x01(\t\"D\n\x10GetModelResponse\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"f\n\x19WorkerRegistrationRequest\x12\x10\n\x08hostname\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\x12)\n\x0flocal_gis_joins\x18\x03 \x03(\x0b\x32\x10.GisJoinMetadata\"#\n\x0fGisJoinMetadata\x12\x10\n\x08gis_join\x18\x01 \x01(\t\"-\n\x1aWorkerRegistrationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x93\x02\n\x06Master\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x31\n\x08GetModel\x12\x10.GetModelRequest\x1a\x11.GetModelResponse\"\x00\x12K\n\x0eRegisterWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x12M\n\x10\x44\x65registerWorker\x12\x1a.WorkerRegistrationRequest\x1a\x1b.WorkerRegistrationResponse\"\x00\x32w\n\x06Worker\x12:\n\x0b\x42uildModels\x12\x13.BuildModelsRequest\x1a\x14.BuildModelsResponse\"\x00\x12\x31\n\x08GetModel\x12\x10.GetModelRequest\x1a\x11.GetModelResponse\"\x00\x62\x06proto3'
 )
 
 
@@ -338,7 +338,7 @@ _MASTER = _descriptor.ServiceDescriptor(
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
   serialized_start=382,
-  serialized_end=658,
+  serialized_end=657,
   methods=[
   _descriptor.MethodDescriptor(
     name='BuildModels',
@@ -351,8 +351,8 @@ _MASTER = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='GetModels',
-    full_name='Master.GetModels',
+    name='GetModel',
+    full_name='Master.GetModel',
     index=1,
     containing_service=None,
     input_type=_GETMODELREQUEST,
@@ -393,8 +393,8 @@ _WORKER = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=660,
-  serialized_end=780,
+  serialized_start=659,
+  serialized_end=778,
   methods=[
   _descriptor.MethodDescriptor(
     name='BuildModels',
@@ -407,8 +407,8 @@ _WORKER = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='GetModels',
-    full_name='Worker.GetModels',
+    name='GetModel',
+    full_name='Worker.GetModel',
     index=1,
     containing_service=None,
     input_type=_GETMODELREQUEST,
