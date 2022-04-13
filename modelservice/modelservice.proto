@@ -50,6 +50,11 @@ message GetModelResponse {
 message WorkerRegistrationRequest {
   string hostname = 1;
   int32 port = 2;
+  repeated GisJoinMetadata local_gis_joins = 3;
+}
+
+message GisJoinMetadata {
+  string gis_join = 1;
 }
 
 message WorkerRegistrationResponse {
