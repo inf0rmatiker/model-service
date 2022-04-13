@@ -1,12 +1,45 @@
 import grpc
 import socket
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
 
 from modelservice import modelservice_pb2_grpc
-from modelservice.modelservice_pb2 import WorkerRegistrationRequest, WorkerRegistrationResponse, BuildModelsRequest, \
+from modelservice.modelservice_pb2 import BudgetType, WorkerRegistrationRequest, WorkerRegistrationResponse, BuildModelsRequest, \
     GetModelRequest, GetModelResponse, BuildModelsResponse
 
+
+class JobMetadata:
+
+    # Takes a job ID and a list of SpatialAllocations
+    # Example: [
+    #           {gis_join: "G5600050", strata_limit: 2000, sample_rate: 0.0},
+    #           {gis_join: "G5600170", strata_limit: 2300, sample_rate: 0.0},
+    #           ...
+    #          ]
+    def __init__(self, job_id: str, gis_joins: list):
+        self.job_id = job_id
+        self.worker_jobs = {}  # Mapping of { worker_hostname -> WorkerJobMetadata }
+        self.status = "NEW"
+
+class WorkerJobMetadata:
+
+    def __init__(self, job_id, worker_ref):
+        self.job_id = job_id
+        self.worker = worker_ref
+        self.gis_joins = []  # list of SpatialAllocation objects
+        self.status = "NEW"
+
+    def complete(self):
+        self.status = "DONE"
+
+    def __repr__(self):
+        gis_joins_str = ""
+        for gis_join in self.gis_joins:
+            gis_joins_str += "  {gis_join=%s, strata_limit=%d, sample_rate=%.2f}\n" \
+                             % (gis_join.gis_join, gis_join.strata_limit, gis_join.sample_rate)
+        return f"WorkerJobMetadata: job_id={self.job_id}, worker={self.worker.hostname}, status={self.status}, " \
+               f"gis_joins=[\n{gis_joins_str}\n]"
 
 class WorkerMetadata:
 
@@ -17,6 +50,44 @@ class WorkerMetadata:
     def __repr__(self):
         return f"WorkerMetadata: hostname={self.hostname}, port={self.port}"
 
+def get_or_create_worker_job(worker: WorkerMetadata, job_id: str) -> WorkerJobMetadata:
+    if job_id not in worker.jobs:
+        info(f"Creating job for worker={worker.hostname}, job={job_id}")
+        worker.jobs[job_id] = WorkerJobMetadata(job_id, worker)
+    return worker.jobs[job_id]
+
+def generate_job_id() -> str:
+    return uuid.uuid4().hex
+
+# Launches a round of worker jobs based on the master job mode selected.
+# Returns a list of WorkerValidationJobResponse objects.
+def launch_worker_jobs(request: BuildModelsRequest, job: JobMetadata) -> list:
+    # Define async function to launch worker job
+    async def run_worker_job(_worker_job: WorkerJobMetadata, _request: BuildModelsRequest) -> BuildModelsResponses:
+        info("Launching async run_worker_job()...")
+        _worker = _worker_job.worker
+        async with grpc.aio.insecure_channel(f"{_worker.hostname}:{_worker.port}") as channel:
+            stub = validation_pb2_grpc.WorkerStub(channel)
+            request_copy = BuildModelsRequest()
+            request_copy.CopyFrom(_request)
+            request_copy.id = _worker_job.job_id
+
+            return await stub.BuildModels(request_copy)
+
+    # Iterate over all the worker jobs created for this job and create asyncio tasks for them
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    tasks = []
+    for worker_hostname, worker_job in job.worker_jobs.items():
+        if len(worker_job.gis_joins) > 0:
+            tasks.append(loop.create_task(run_worker_job(worker_job, request)))
+
+    task_group = asyncio.gather(*tasks)
+    responses = loop.run_until_complete(task_group)
+    loop.close()
+
+    return list(responses)
 
 # Master Service
 class Master(modelservice_pb2_grpc.MasterServicer):
@@ -31,8 +102,31 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         self.tracked_workers = {}       # Mapping of { hostname -> WorkerMetadata }
         self.gis_join_locations = {}    # Mapping of { gis_join -> WorkerMetadata }
 
+    # Generates a JobMetadata object from the set of GISJOIN allocations
+    def create_job(self) -> JobMetadata:
+
+        job_id: str = generate_job_id()  # Random UUID for the job
+        job: JobMetadata = JobMetadata(job_id)
+        info(f"Created job id {job_id}")
+
+        # Add all tracked workers to job
+        for worker in self.tracked_workers:
+            # Found a registered worker for this GISJOIN, get or create a job for it, and update jobs map
+            worker_job: WorkerJobMetadata = get_or_create_worker_job(worker, job_id)
+            # worker_job.gis_joins.append(spatial_allocation)
+            job.worker_jobs[worker.hostname] = worker_job
+
+        return job
+
     def is_worker_registered(self, hostname):
         return hostname in self.tracked_workers
+
+    # Processes a job and returns a list of WorkerValidationJobResponse objects.
+    def process_job(self, request: BuildModelsRequest) -> (str, list):
+
+        # Create and launch a job from allocations
+        job: JobMetadata = self.create_job()
+        return job.job_id, launch_worker_jobs(request, job)
 
     def RegisterWorker(self, request: WorkerRegistrationRequest, context):
         info(f"Received request to register worker: hostname={request.hostname}, port={request.port}")
@@ -64,7 +158,38 @@ class Master(modelservice_pb2_grpc.MasterServicer):
 
     def BuildModels(self, request: BuildModelsRequest, context):
         info(f"Received request to build models")
-        return BuildModelsResponse()
+
+        # Time the entire job from start to finish
+        profiler: Timer = Timer()
+        profiler.start()
+
+        job_id, worker_responses = self.process_job(request)
+
+        errors = []
+        ok = True
+
+        if len(worker_responses) == 0:
+            error_msg = "Did not receive any responses from workers"
+            ok = False
+            error(error_msg)
+            errors.append(error_msg)
+        else:
+            for worker_response in worker_responses:
+                if not worker_response.ok:
+                    ok = False
+                    error_msg = f"{worker_response.hostname} error: {worker_response.error_msg}"
+                    errors.append(error_msg)
+
+        error_msg = f"errors: {errors}"
+        profiler.stop()
+
+        return BuildModelsResponse(
+            id=job_id,
+            ok=ok,
+            error_msg=error_msg,
+            duration_sec=profiler.elapsed,
+            worker_responses=worker_responses
+        )
 
     def GetModels(self, request: GetModelRequest, context):
         info(f"Received request to retrieve model(s)")
