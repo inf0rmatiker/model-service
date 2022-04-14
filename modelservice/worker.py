@@ -7,7 +7,8 @@ from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
 
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, \
+    GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -20,7 +21,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         self.port = port
         self.data_dir = data_dir
         self.is_registered = False
-        self.local_gis_joins: list = []
+        self.local_gis_joins: dict = discover_local_gis_joins(data_dir)  # mapping of { gis_join -> <csv_path> }
 
         # Register with master
         self.register()
@@ -45,14 +46,6 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             info("We are not registered, no need to deregister")
 
     def register(self):
-        info("Gathering GIS info")
-
-        # Use data_dir to get list of all GIS joins on this server
-        for file in os.listdir(self.data_dir):
-            if file.endswith(".csv"):
-                nameParts = file.split(".")
-                self.local_gis_joins.append(nameParts[0])
-
         info("Registering...")
         # Send WorkerRegistrationRequest to master
         with grpc.insecure_channel(f"{self.master_hostname}:{self.master_port}") as channel:
@@ -84,6 +77,22 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
     def GetModel(self, request: GetModelRequest, context):
         info(f"Received request to retrieve model(s)")
         return GetModelResponse()
+
+
+# Returns a dictionary of { gis_join }
+def discover_local_gis_joins(data_dir: str) -> dict:
+    # Clean off trailing slash if present
+    data_dir = data_dir[:-1] if data_dir.endswith("/") else data_dir
+    gis_join_file_locations: dict = {}
+
+    # Use data_dir to get list of all GISJOIN .csvs on this server
+    for filename in os.listdir(data_dir):
+        if filename.endswith(".csv"):
+            name_parts = filename.split(".")
+            gis_join: str = name_parts[0]
+            gis_join_file_locations[gis_join] = f"{data_dir}/{filename}"
+
+    return gis_join_file_locations
 
 
 def shutdown_gracefully(worker: Worker) -> None:
