@@ -11,12 +11,6 @@ from modelservice.modelservice_pb2 import BudgetType, WorkerRegistrationRequest,
 
 class JobMetadata:
 
-    # Takes a job ID and a list of SpatialAllocations
-    # Example: [
-    #           {gis_join: "G5600050", strata_limit: 2000, sample_rate: 0.0},
-    #           {gis_join: "G5600170", strata_limit: 2300, sample_rate: 0.0},
-    #           ...
-    #          ]
     def __init__(self, job_id: str, gis_joins: list):
         self.job_id = job_id
         self.worker_jobs = {}  # Mapping of { worker_hostname -> WorkerJobMetadata }
@@ -27,19 +21,13 @@ class WorkerJobMetadata:
     def __init__(self, job_id, worker_ref):
         self.job_id = job_id
         self.worker = worker_ref
-        self.gis_joins = []  # list of SpatialAllocation objects
         self.status = "NEW"
 
     def complete(self):
         self.status = "DONE"
 
     def __repr__(self):
-        gis_joins_str = ""
-        for gis_join in self.gis_joins:
-            gis_joins_str += "  {gis_join=%s, strata_limit=%d, sample_rate=%.2f}\n" \
-                             % (gis_join.gis_join, gis_join.strata_limit, gis_join.sample_rate)
-        return f"WorkerJobMetadata: job_id={self.job_id}, worker={self.worker.hostname}, status={self.status}, " \
-               f"gis_joins=[\n{gis_joins_str}\n]"
+        return f"WorkerJobMetadata: job_id={self.job_id}, worker={self.worker.hostname}, status={self.status}, "
 
 class WorkerMetadata:
 
@@ -80,8 +68,7 @@ def launch_worker_jobs(request: BuildModelsRequest, job: JobMetadata) -> list:
 
     tasks = []
     for worker_hostname, worker_job in job.worker_jobs.items():
-        if len(worker_job.gis_joins) > 0:
-            tasks.append(loop.create_task(run_worker_job(worker_job, request)))
+        tasks.append(loop.create_task(run_worker_job(worker_job, request)))
 
     task_group = asyncio.gather(*tasks)
     responses = loop.run_until_complete(task_group)
@@ -92,7 +79,6 @@ def launch_worker_jobs(request: BuildModelsRequest, job: JobMetadata) -> list:
 # Master Service
 class Master(modelservice_pb2_grpc.MasterServicer):
 
-    # def __init__(self, hostname: str = "localhost", port: int = 50051):
     def __init__(self, hostname: str, port: int):
         super(Master, self).__init__()
         self.hostname = hostname
