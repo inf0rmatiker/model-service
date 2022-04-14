@@ -6,10 +6,14 @@ function print_usage {
   echo -e "\tPlease make sure you have a 'workers' file, with the hostnames of each worker separated by newlines"
 }
 
-[[ $# -eq 1 ]] || print_usage || exit 1
+[[ ! $# -eq 1 ]] && print_usage && exit 1
+
 ORIGINAL_TAR_FILE=$1
-[[ -f "$ORIGINAL_TAR_FILE" ]] && [[ $ORIGINAL_TAR_FILE == *.tar ]] || print_usage || exit 1
-[[ -f "./workers" ]] || echo "No './workers' file found, please create one first" || exit 1
+if [[ ! -f "$ORIGINAL_TAR_FILE" || ! $ORIGINAL_TAR_FILE == *.tar ]]; then
+  print_usage ; exit 1
+fi
+
+[[ ! -f "./workers" ]] && echo "No './workers' file found, please create one first" && exit 1
 
 TEMP_LOC="/tmp/model_service"
 [[ ! -d $TEMP_LOC ]] && mkdir $TEMP_LOC && tar -xvf "$ORIGINAL_TAR_FILE" -C "$TEMP_LOC"
