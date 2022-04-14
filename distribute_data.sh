@@ -24,7 +24,10 @@ NUM_FILES=$(ls $TEMP_LOC/*.csv | wc -l)
 FILES_PER_WORKER=$((NUM_FILES / NUM_WORKERS))
 while read -r WORKER; do
   BATCH=$(ls $TEMP_LOC/*.csv | head -n $FILES_PER_WORKER)
+  ssh -n "$WORKER" "mkdir /tmp/model_service"
   for CSV_FILE in ${BATCH[@]}; do
     echo -e "Sending $CSV_FILE to $WORKER..."
+    scp "$CSV_FILE" "$WORKER:/tmp/model_service/"
+    rm "$CSV_FILE"
   done
 done < "./workers"
