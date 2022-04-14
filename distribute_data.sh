@@ -31,3 +31,8 @@ while read -r WORKER; do
     rm "$CSV_FILE"
   done
 done < "./workers"
+
+# Finish up with just the last worker
+scp $TEMP_LOC/*.csv "$WORKER:/tmp/model_service/"
+
+echo -e "Finished distributing $NUM_FILES / $NUM_WORKERS = ~$FILES_PER_WORKER files per worker"
