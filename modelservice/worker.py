@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
 
 from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, \
-    GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest
+    GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -70,13 +70,23 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             else:
                 error(f"Failed to register worker {self.hostname}:{self.port}: {registration_response}")
 
-    def BuildModels(self, request: BuildModelsRequest, context):
-        info(f"Received request to build models")
-        return BuildModelsResponse()
+    def BuildModels(self, request: BuildModelsRequest, context) -> WorkerBuildModelsResponse:
+        info(f"Received request to build models: {request}")
+        return BuildModelsResponse(
+            id=request.id,
+            hostname=self.hostname,
+            duration_sec=0.0,  # TODO: Capture job profile
+            error_occurred=True,
+            error_msg="Building models currently unimplemented"
+        )
 
-    def GetModel(self, request: GetModelRequest, context):
+    def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
         info(f"Received request to retrieve model(s)")
-        return GetModelResponse()
+        return GetModelResponse(
+            id=request.id,
+            error_occurred=True,
+            error_msg="Fetching models currently unimplemented"
+        )
 
 
 # Returns a dictionary of { gis_join }

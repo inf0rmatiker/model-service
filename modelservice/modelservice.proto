@@ -29,20 +29,28 @@ service Worker {
 // --------- Message Definitions ----------
 
 message BuildModelsRequest {
-  string label_field = 1;
-  repeated string feature_fields = 2;
-  HyperParameters hyper_parameters = 3;
+  string id = 1;  // not present in request to master, but present in requests to workers
+  string label_field = 2;
+  repeated string feature_fields = 3;
+  repeated string gis_joins = 4;  // not present in request to master, but present in requests to workers
+  HyperParameters hyper_parameters = 5;
 }
 
 message BuildModelsResponse {
-  float duration_sec = 1;
-  repeated WorkerBuildModelsResponse worker_responses = 2;
+  string id = 1;
+  float duration_sec = 2;
+  bool error_occurred = 3;
+  string error_msg = 4;
+  repeated WorkerBuildModelsResponse worker_responses = 5;
 }
 
 message WorkerBuildModelsResponse {
-  string hostname = 1;
-  float duration_sec = 2;
-  repeated EvaluationMetric validation_metrics = 3;
+  string id = 1;
+  string hostname = 2;
+  float duration_sec = 3;
+  bool error_occurred = 4;
+  string error_msg = 5;
+  repeated EvaluationMetric validation_metrics = 6;
 }
 
 message GetModelRequest {
@@ -52,8 +60,10 @@ message GetModelRequest {
 
 message GetModelResponse {
   string model_id = 1;
-  string filename = 2;
-  bytes data = 3;
+  bool error_occurred = 2;
+  string error_msg = 3;
+  string filename = 4;
+  bytes data = 5;
 }
 
 message WorkerRegistrationRequest {
@@ -70,7 +80,9 @@ message EvaluationMetric {
   float training_loss = 1;
   float validation_loss = 2;
   float duration_sec = 3;
-  GisJoinMetadata gis_join_metadata = 4;
+  bool error_occurred = 4;
+  string error_message = 5;
+  GisJoinMetadata gis_join_metadata = 6;
 }
 
 message GisJoinMetadata {
