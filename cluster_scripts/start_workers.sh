@@ -14,7 +14,7 @@ if [[ $# -eq 0 ]]; then
   MASTER_URI="$MASTER_HOSTNAME:$MASTER_PORT"
   DATA_DIR="/tmp/model_service"
 
-  for WORKER_HOST in $(cat "$WORKER_HOSTS_FILE"); do
+  for WORKER_HOST in $(cat "./workers"); do
     echo -e "Launching worker on $WORKER_HOST:$WORKER_PORT"
     ssh "$WORKER_HOST" "cd ~/model-service && ./run_worker.sh $MASTER_URI $WORKER_PORT $DATA_DIR --daemon"
     sleep 1
