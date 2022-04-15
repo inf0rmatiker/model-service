@@ -11,7 +11,7 @@ if [[ $# -eq 1 ]]; then
   [ "$MASTER_PROCESSES" != "" ] && echo -e "Found master processes running!\n$MASTER_PROCESSES\nPlease kill first before starting." && exit 1
 
   MASTER_PORT=$1
-  python3.8 -m modelservice --master --port="$MASTER_PORT"
+  ./bin/python3.8 -m modelservice --master --port="$MASTER_PORT"
 
 else
   print_usage
