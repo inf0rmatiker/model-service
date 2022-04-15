@@ -22,4 +22,4 @@ sleep 1
 
 cd "$CURR_DIR" || exit 1
 echo -e "Starting Workers..."
-./start_workers.sh "$(hostname):$MASTER_PORT" "$WORKERS_FILE"
+./start_workers.sh
