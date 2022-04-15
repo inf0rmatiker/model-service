@@ -16,9 +16,9 @@ if [[ $# -ge 3 ]]; then
   DAEMON=$4
 
   if [ "$DAEMON" == "--daemon" ]; then
-    nohup python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT"  --data_dir="$DATA_DIR" > "worker_log_$(hostname).log" 2>&1 & disown
+    nohup ./bin/python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT"  --data_dir="$DATA_DIR" > "worker_log_$(hostname).log" 2>&1 & disown
   else
-    python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT" --data_dir="$DATA_DIR"
+    ./bin/python3.8 -m modelservice --worker --master_uri="$MASTER_URI" --port="$WORKER_PORT" --data_dir="$DATA_DIR"
   fi
 
 else
