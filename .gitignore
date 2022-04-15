@@ -131,3 +131,7 @@ dmypy.json
 
 # Jetbrains IDEA/PyCharm
 .idea/
+
+bin/
+lib64
+pyvenv.cfg
