@@ -12,7 +12,7 @@ if [[ $# -eq 2 ]]; then
 
   MASTER_URI=$1
   PROXY_PORT=$2
-  python3.8 -m modelservice --proxy --master_uri="$MASTER_URI" --port="$PROXY_PORT"
+  ./bin/python3.8 -m modelservice --proxy --master_uri="$MASTER_URI" --port="$PROXY_PORT"
 
 else
   print_usage

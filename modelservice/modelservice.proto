@@ -8,7 +8,7 @@ service Master {
   rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
 
   // Queries the built models by spatial extent
-  rpc GetModels (GetModelRequest) returns (GetModelResponse) {}
+  rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 
   // Registers a Worker to track
   rpc RegisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
@@ -23,17 +23,34 @@ service Worker {
   rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
 
   // Queries the local built models at the worker level
-  rpc GetModels (GetModelRequest) returns (GetModelResponse) {}
+  rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 }
 
 // --------- Message Definitions ----------
 
 message BuildModelsRequest {
-  //
+  string id = 1;  // not present in request to master, but present in requests to workers
+  string label_field = 2;
+  repeated string feature_fields = 3;
+  repeated string gis_joins = 4;  // not present in request to master, but present in requests to workers
+  HyperParameters hyper_parameters = 5;
 }
 
 message BuildModelsResponse {
-  //
+  string id = 1;
+  float duration_sec = 2;
+  bool error_occurred = 3;
+  string error_msg = 4;
+  repeated WorkerBuildModelsResponse worker_responses = 5;
+}
+
+message WorkerBuildModelsResponse {
+  string id = 1;
+  string hostname = 2;
+  float duration_sec = 3;
+  bool error_occurred = 4;
+  string error_msg = 5;
+  repeated EvaluationMetric validation_metrics = 6;
 }
 
 message GetModelRequest {
@@ -43,8 +60,10 @@ message GetModelRequest {
 
 message GetModelResponse {
   string model_id = 1;
-  string filename = 2;
-  bytes data = 3;
+  bool error_occurred = 2;
+  string error_msg = 3;
+  string filename = 4;
+  bytes data = 5;
 }
 
 message WorkerRegistrationRequest {
@@ -53,13 +72,67 @@ message WorkerRegistrationRequest {
   repeated GisJoinMetadata local_gis_joins = 3;
 }
 
-message GisJoinMetadata {
-  string gis_join = 1;
-}
-
 message WorkerRegistrationResponse {
   bool success = 1;
 }
 
+message EvaluationMetric {
+  float training_loss = 1;
+  float validation_loss = 2;
+  float duration_sec = 3;
+  bool error_occurred = 4;
+  string error_message = 5;
+  GisJoinMetadata gis_join_metadata = 6;
+}
+
+message GisJoinMetadata {
+  string gis_join = 1;
+  int64 count = 2;
+}
+
+message HyperParameters {
+  int32 epochs = 1;
+  float learning_rate = 2;
+  bool normalize_inputs = 3;
+  float train_split = 4;  // Fraction of data to use as training data. Default = 0.8
+  OptimizerType optimizer_type = 5;
+  LossType loss_type = 6;
+
+  // Model specification
+  InputLayer input_layer = 7;
+  repeated HiddenLayer hidden_layers = 8;
+  OutputLayer output_layer = 9;
+}
+
+message InputLayer {
+  ActivationType activation = 1;
+  string name = 2;
+}
+
+message HiddenLayer {
+  ActivationType activation = 1;
+  string name = 2;
+  int32 units = 3;
+}
+
+message OutputLayer {
+  ActivationType activation = 1;
+  string name = 2;
+}
 
 // --------- Enum Definitions ----------
+
+enum OptimizerType {
+  ADAM = 0;
+  SGD = 1;
+}
+
+enum LossType {
+  MEAN_SQUARED_ERROR = 0;
+  ROOT_MEAN_SQUARED_ERROR = 1;
+  MEAN_ABSOLUTE_ERROR = 2;
+}
+
+enum ActivationType {
+  RELU = 0;
+}
