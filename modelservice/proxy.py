@@ -1,4 +1,8 @@
+import grpc
+
 from flask import Flask, request
+from modelservice import modelservice_pb2_grpc
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, HyperParameters
 
 app = Flask(__name__)
 
@@ -26,8 +30,34 @@ def submit_job():
     request_data: str = request.json
     print(f"request_data: {request_data}")
 
-    # TODO Parse query from HTTP JSON -> build gRPC request to Master
+    # TODO: Add checks for optimizer and loss types to ensure the values provided exist in the enums
 
-    # TODO Send gRPC request to master and relay response back to client
+    with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
+        stub: modelservice_pb2_grpc.MasterStub = modelservice_pb2_grpc.MasterStub(channel)
 
-    return "At some point, your job will be submitted"
+        request_hyper_parameters: HyperParameters = HyperParameters(
+            epochs=request_data.epochs,
+            learning_rate=request_data.learning_rate,
+            normalize_inputs=request_data.normalize_inputs,
+            train_split=request_data.train_split,
+            optimizer_type=request_data.optimizer_type,
+            loss_type=request_data.loss_type
+        )
+
+        # Build and log gRPC request
+        build_models_grpc_request: BuildModelsRequest = BuildModelsRequest(
+            feature_fields=request_data.feature_fields,
+            label_field=request_data.label_field,
+            hyper_parameters=request_hyper_parameters
+        )
+
+        info(build_models_grpc_request)
+
+        # Submit validation job
+        build_models_grpc_response: BuildModelsResponse = stub.BuildModels(build_models_grpc_request)
+        info(f"Build Models Response received: {build_models_grpc_response}")
+
+    # TODO: Set up proper handling of response from master and response to client
+
+    response_code: int = HTTPStatus.OK if build_models_grpc_response.ok else HTTPStatus.INTERNAL_SERVER_ERROR
+    return build_json_response(build_models_grpc_response), response_code
