@@ -1,10 +1,21 @@
 import grpc
+from google.protobuf.json_format import MessageToJson
 
 from flask import Flask, request
 from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, HyperParameters
 
 app = Flask(__name__)
+
+
+def parameter_usage():
+    return ("One or more parameters provided were of an incorrect type. Please check the types sent in your request.\n",
+            "epochs -> integer (e.g., 10)\n",
+            "learning_rate -> float (e.g., 0.1)\n",
+            "normalize_inputs -> numeric boolean with value of one of [0, 1]\n",
+            "train_split -> float (e.g., 0.8)\n",
+            "optimizer_type -> string with value of one of ['ADAM', 'SGD']\n",
+            "loss_type -> string with value of one of ['MEAN_SQUARED_ERROR', 'ROOT_MEAN_SQUARED_ERROR', 'MEAN_ABSOLUTE_ERROR']\n")
 
 
 # Main entrypoint
@@ -30,11 +41,31 @@ def submit_job():
     request_data: str = request.json
     print(f"request_data: {request_data}")
 
-    # TODO: Add checks for optimizer and loss types to ensure the values provided exist in the enums
+    # Try to cast request data to proper types and return parameter usage error if any are incorrect
+    try:
+        param_epochs: int = int(request_data.epochs) if request_data.epochs else 50
+        param_learning_rate: float = float(request_data.learning_rate) if request_data.learning_rate else 0.001
+        param_normalize_inputs: bool = bool(request_data.normalize_inputs) if not request_data.normalize_inputs == "" else True
+        param_train_split: float = float(request_data.train_split) if request_data.train_split else 0.8
+    except Exception:
+        return parameter_usage()
+
+    # Check that optimizer_type is one of the correct types and return parameter usage error if not
+    if request_data.optimizer_type == "" or request_data.optimizer_type in ["ADAM", "SGD"]:
+        param_optimizer_type: str = request_data.optimizer_type if request_data.optimizer_type else "ADAM"
+    else:
+        return parameter_usage()
+
+    # Check that loss_type is one of the correct types and return parameter usage error if not
+    if request_data.loss_type == "" or request_data.loss_type in ["MEAN_SQUARED_ERROR", "ROOT_MEAN_SQUARED_ERROR", "MEAN_ABSOLUTE_ERROR"]:
+        param_loss_type: str = request_data.loss_type if request_data.loss_type else "MEAN_SQUARED_ERROR"
+    else:
+        return parameter_usage()
 
     with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
         stub: modelservice_pb2_grpc.MasterStub = modelservice_pb2_grpc.MasterStub(channel)
 
+        # Set up HyperParameters object to be added to BuildModelsRequest
         request_hyper_parameters: HyperParameters = HyperParameters(
             epochs=request_data.epochs,
             learning_rate=request_data.learning_rate,
@@ -59,5 +90,9 @@ def submit_job():
 
     # TODO: Set up proper handling of response from master and response to client
 
-    response_code: int = HTTPStatus.OK if build_models_grpc_response.ok else HTTPStatus.INTERNAL_SERVER_ERROR
+    response_code: int = HTTPStatus.INTERNAL_SERVER_ERROR if build_models_grpc_response.error_occurred else HTTPStatus.OK
     return build_json_response(build_models_grpc_response), response_code
+
+
+def build_json_response(build_models_grpc_response: BuildModelsResponse) -> str:
+    return MessageToJson(build_models_grpc_response, preserving_proto_field_name=True)
