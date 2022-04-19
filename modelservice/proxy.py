@@ -1,7 +1,8 @@
 import grpc
-from google.protobuf.json_format import MessageToJson
-
 from flask import Flask, request
+from google.protobuf.json_format import MessageToJson
+from logging import info, error
+
 from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, HyperParameters
 
