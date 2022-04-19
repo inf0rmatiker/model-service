@@ -1,6 +1,7 @@
 import grpc
 from flask import Flask, request
 from google.protobuf.json_format import MessageToJson
+from http import HTTPStatus
 from logging import info, error
 
 from modelservice import modelservice_pb2_grpc
