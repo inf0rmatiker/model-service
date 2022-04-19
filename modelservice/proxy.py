@@ -47,8 +47,9 @@ def submit_job():
         param_learning_rate: float = float(request_data.learning_rate) if request_data.learning_rate else 0.001
         param_normalize_inputs: bool = bool(request_data.normalize_inputs) if not request_data.normalize_inputs == "" else True
         param_train_split: float = float(request_data.train_split) if request_data.train_split else 0.8
-    except Exception:
+    except Exception as err:
         print("try-except exception for casting request values")
+        print(err)
         return parameter_usage()
 
     # Check that optimizer_type is one of the correct types and return parameter usage error if not
