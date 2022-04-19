@@ -48,18 +48,21 @@ def submit_job():
         param_normalize_inputs: bool = bool(request_data.normalize_inputs) if not request_data.normalize_inputs == "" else True
         param_train_split: float = float(request_data.train_split) if request_data.train_split else 0.8
     except Exception:
+        print("try-except exception for casting request values")
         return parameter_usage()
 
     # Check that optimizer_type is one of the correct types and return parameter usage error if not
     if request_data.optimizer_type == "" or request_data.optimizer_type in ["ADAM", "SGD"]:
         param_optimizer_type: str = request_data.optimizer_type if request_data.optimizer_type else "ADAM"
     else:
+        print("if-else exception for optimizer_type")
         return parameter_usage()
 
     # Check that loss_type is one of the correct types and return parameter usage error if not
     if request_data.loss_type == "" or request_data.loss_type in ["MEAN_SQUARED_ERROR", "ROOT_MEAN_SQUARED_ERROR", "MEAN_ABSOLUTE_ERROR"]:
         param_loss_type: str = request_data.loss_type if request_data.loss_type else "MEAN_SQUARED_ERROR"
     else:
+        print("if-else exception for loss_type")
         return parameter_usage()
 
     with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
