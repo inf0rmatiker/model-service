@@ -9,12 +9,12 @@ app = Flask(__name__)
 
 
 def parameter_usage():
-    return ("One or more parameters provided were of an incorrect type. Please check the types sent in your request.\n",
-            "epochs -> integer (e.g., 10)\n",
-            "learning_rate -> float (e.g., 0.1)\n",
-            "normalize_inputs -> numeric boolean with value of one of [0, 1]\n",
-            "train_split -> float (e.g., 0.8)\n",
-            "optimizer_type -> string with value of one of ['ADAM', 'SGD']\n",
+    return ("One or more parameters provided were of an incorrect type. Please check the types sent in your request.\n"
+            "epochs -> integer (e.g., 10)\n"
+            "learning_rate -> float (e.g., 0.1)\n"
+            "normalize_inputs -> numeric boolean with value of one of [0, 1]\n"
+            "train_split -> float (e.g., 0.8)\n"
+            "optimizer_type -> string with value of one of ['ADAM', 'SGD']\n"
             "loss_type -> string with value of one of ['MEAN_SQUARED_ERROR', 'ROOT_MEAN_SQUARED_ERROR', 'MEAN_ABSOLUTE_ERROR']\n")
 
 
