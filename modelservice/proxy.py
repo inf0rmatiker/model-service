@@ -1,6 +1,29 @@
+import grpc
 from flask import Flask, request
+from google.protobuf.json_format import MessageToJson, Parse
+from http import HTTPStatus
+from logging import info, error
+
+from modelservice import modelservice_pb2_grpc
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, HyperParameters
 
 app = Flask(__name__)
+
+
+def parameter_usage():
+    return ("One or more parameters provided were of an incorrect type or incorrect structure. "
+            "Please check the types and structure sent in your request.\n"
+            "feature_fields -> array/list (e.g., ['abc', 'def'])\n"
+            "label_field -> string (e.g., 'def')\n"
+            "hyper_parameters -> dict/object (e.g., { 'epochs': 10 })\n"
+            "hyper_parameters: {\n"
+            "   epochs -> integer (e.g., 10)\n"
+            "   learning_rate -> float (e.g., 0.1)\n"
+            "   normalize_inputs -> numeric boolean with value of one of [0, 1]\n"
+            "   train_split -> float (e.g., 0.8)\n"
+            "   optimizer_type -> string with value of one of ['ADAM', 'SGD']\n"
+            "   loss_type -> string with value of one of ['MEAN_SQUARED_ERROR', 'ROOT_MEAN_SQUARED_ERROR', 'MEAN_ABSOLUTE_ERROR']\n"
+            "}\n")
 
 
 # Main entrypoint
@@ -23,11 +46,30 @@ def get_model():
 
 @app.route("/model", methods=["POST"])
 def submit_job():
-    request_data: str = request.json
-    print(f"request_data: {request_data}")
+    request_data_string: str = request.json
+    print(f"request_data: {request_data_string}")
+    print(f"request.data: {request.data}")
 
-    # TODO Parse query from HTTP JSON -> build gRPC request to Master
+    # Try to cast request data to proper types and return parameter usage error if any are incorrect
+    try:
+        build_models_grpc_request: BuildModelsRequest = Parse(request.data, BuildModelsRequest())
+    except Exception as err:
+        print("try-except exception for casting request values")
+        print(err)
+        return parameter_usage()
 
-    # TODO Send gRPC request to master and relay response back to client
+    with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
+        stub: modelservice_pb2_grpc.MasterStub = modelservice_pb2_grpc.MasterStub(channel)
 
-    return "At some point, your job will be submitted"
+        info(build_models_grpc_request)
+
+        # Submit validation job
+        build_models_grpc_response: BuildModelsResponse = stub.BuildModels(build_models_grpc_request)
+        info(f"Build Models Response received: {build_models_grpc_response}")
+
+    response_code: int = HTTPStatus.INTERNAL_SERVER_ERROR if build_models_grpc_response.error_occurred else HTTPStatus.OK
+    return build_json_response(build_models_grpc_response), response_code
+
+
+def build_json_response(build_models_grpc_response: BuildModelsResponse) -> str:
+    return MessageToJson(build_models_grpc_response, preserving_proto_field_name=True)
