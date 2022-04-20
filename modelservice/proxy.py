@@ -1,5 +1,5 @@
 import grpc
-import json
+# import json
 from flask import Flask, request
 from google.protobuf.json_format import MessageToJson, Parse
 from http import HTTPStatus
@@ -43,6 +43,7 @@ def get_model():
 def submit_job():
     request_data_string: str = request.json
     print(f"request_data: {request_data_string}")
+    print(f"request: {request}")
 
     # # Try to cast request data to proper types and return parameter usage error if any are incorrect
     # try:
@@ -69,8 +70,8 @@ def submit_job():
     #     print("if-else exception for loss_type")
     #     return parameter_usage()
 
-    request_data: dict = json.loads(request_data_string)
-    
+    # request_data: dict = json.loads(request_data_string)
+
     try:
         build_models_grpc_request: BuildModelsRequest = Parse(request_data, BuildModelsRequest())
     except Exception as err:
