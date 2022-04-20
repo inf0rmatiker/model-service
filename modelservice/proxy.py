@@ -1,5 +1,4 @@
 import grpc
-# import json
 from flask import Flask, request
 from google.protobuf.json_format import MessageToJson, Parse
 from http import HTTPStatus
@@ -24,7 +23,7 @@ def parameter_usage():
             "   train_split -> float (e.g., 0.8)\n"
             "   optimizer_type -> string with value of one of ['ADAM', 'SGD']\n"
             "   loss_type -> string with value of one of ['MEAN_SQUARED_ERROR', 'ROOT_MEAN_SQUARED_ERROR', 'MEAN_ABSOLUTE_ERROR']\n"
-            "}")
+            "}\n")
 
 
 # Main entrypoint
@@ -51,33 +50,7 @@ def submit_job():
     print(f"request_data: {request_data_string}")
     print(f"request.data: {request.data}")
 
-    # # Try to cast request data to proper types and return parameter usage error if any are incorrect
-    # try:
-    #     param_epochs: int = int(request_data["epochs"]) if request_data["epochs"] else 50
-    #     param_learning_rate: float = float(request_data["learning_rate"]) if request_data["learning_rate"] else 0.001
-    #     param_normalize_inputs: bool = bool(request_data["normalize_inputs"]) if not request_data["normalize_inputs"] == "" else True
-    #     param_train_split: float = float(request_data["train_split"]) if request_data["train_split"] else 0.8
-    # except Exception as err:
-    #     print("try-except exception for casting request values")
-    #     print(err)
-    #     return parameter_usage()
-    #
-    # # Check that optimizer_type is one of the correct types and return parameter usage error if not
-    # if request_data["optimizer_type"] == "" or request_data["optimizer_type"] in ["ADAM", "SGD"]:
-    #     param_optimizer_type: str = request_data["optimizer_type"] if request_data["optimizer_type"] else "ADAM"
-    # else:
-    #     print("if-else exception for optimizer_type")
-    #     return parameter_usage()
-    #
-    # # Check that loss_type is one of the correct types and return parameter usage error if not
-    # if request_data["loss_type"] == "" or request_data["loss_type"] in ["MEAN_SQUARED_ERROR", "ROOT_MEAN_SQUARED_ERROR", "MEAN_ABSOLUTE_ERROR"]:
-    #     param_loss_type: str = request_data["loss_type"] if request_data["loss_type"] else "MEAN_SQUARED_ERROR"
-    # else:
-    #     print("if-else exception for loss_type")
-    #     return parameter_usage()
-
-    # request_data: dict = json.loads(request_data_string)
-
+    # Try to cast request data to proper types and return parameter usage error if any are incorrect
     try:
         build_models_grpc_request: BuildModelsRequest = Parse(request.data, BuildModelsRequest())
     except Exception as err:
@@ -87,23 +60,6 @@ def submit_job():
 
     with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
         stub: modelservice_pb2_grpc.MasterStub = modelservice_pb2_grpc.MasterStub(channel)
-
-        # # Set up HyperParameters object to be added to BuildModelsRequest
-        # request_hyper_parameters: HyperParameters = HyperParameters(
-        #     epochs=param_epochs,
-        #     learning_rate=param_learning_rate,
-        #     normalize_inputs=param_normalize_inputs,
-        #     train_split=param_train_split,
-        #     optimizer_type=param_optimizer_type,
-        #     loss_type=param_loss_type
-        # )
-        #
-        # # Build and log gRPC request
-        # build_models_grpc_request: BuildModelsRequest = BuildModelsRequest(
-        #     feature_fields=request_data["feature_fields"],
-        #     label_field=request_data["label_field"],
-        #     hyper_parameters=request_hyper_parameters
-        # )
 
         info(build_models_grpc_request)
 
