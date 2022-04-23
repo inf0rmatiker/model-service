@@ -102,7 +102,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
             # Load data
             csv_path: str = f"{self.data_dir}/{gis_join}.csv"
-            all_df: pd.DataFrame = pd.read_csv(csv_path, header=0)
+            all_df: pd.DataFrame = pd.read_csv(csv_path, header=0).drop("GISJOIN")
             if hyper_parameters.normalize_inputs:
                 scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
                 all_df = pd.DataFrame(scaled, columns=all_df.columns)
