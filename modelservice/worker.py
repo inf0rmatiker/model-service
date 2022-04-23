@@ -2,13 +2,16 @@ import os
 import socket
 import grpc
 import signal
+import tensorflow as tf
+import pandas as pd
 
 from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
 
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, \
-    GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse
+from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, GetModelResponse, GisJoinMetadata, \
+    WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
+    LossType, ActivationType, HiddenLayer, OutputLayer
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -19,7 +22,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         self.master_port = master_port
         self.hostname = hostname
         self.port = port
-        self.data_dir = data_dir
+        self.data_dir = data_dir[:-1] if data_dir.endswith("/") else data_dir
         self.is_registered = False
         self.local_gis_joins: dict = discover_local_gis_joins(data_dir)  # mapping of { gis_join -> <csv_path> }
 
@@ -61,8 +64,8 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 WorkerRegistrationRequest(
                     hostname=self.hostname,
                     port=self.port,
-                    local_gis_joins=gis_join_metadata)
-            )
+                    local_gis_joins=gis_join_metadata
+                ))
 
             if registration_response.success:
                 self.is_registered = True
@@ -72,6 +75,65 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
     def BuildModels(self, request: BuildModelsRequest, context) -> WorkerBuildModelsResponse:
         info(f"Received request to build models: {request}")
+
+        feature_fields: list = list(request.feature_fields)
+        label_field: str = request.label_field
+        hyper_parameters: HyperParameters = request.hyper_parameters
+        epochs: int = hyper_parameters.epochs
+        learning_rate: float = hyper_parameters.learning_rate
+        normalize_inputs: bool = hyper_parameters.normalize_inputs
+        train_split: float = hyper_parameters.train_split
+        test_split: float = 1.0 - train_split
+
+        if hyper_parameters.optimizer_type == OptimizerType.ADAM:
+            optimizer = tf.keras.optimizers.Adam(learning_rate)
+        else:
+            optimizer = tf.keras.optimizers.SGD(learning_rate)
+
+        if hyper_parameters.loss_type == LossType.MEAN_SQUARED_ERROR:
+            loss = "mean_squared_error"
+        elif hyper_parameters.loss_type == LossType.MEAN_SQUARED_ERROR:
+            loss = "mean_squared_error"
+        else:
+            loss = "mean_absolute_error"
+
+        for gis_join in request.gis_joins:
+
+            # Load data
+            csv_path: str = f"{self.data_dir}/{gis_join}.csv"
+            all_df: pd.DataFrame = pd.read_csv(csv_path, header=0)
+            features: pd.DataFrame = all_df[feature_fields]
+            labels: pd.DataFrame = all_df[label_field]
+
+            # Create Sequential model
+            model = tf.keras.Sequential()
+
+            # Add input layer
+            model.add(tf.keras.Input(shape=(len(request.feature_fields))))
+
+            # Add hidden layers
+            for hidden_layer in hyper_parameters.hidden_layers:
+                name: str = hidden_layer.name
+                units: int = hidden_layer.units
+                activation = "relu"
+                model.add(tf.keras.layers.Dense(units=units, activation=activation, name=name))
+
+            # Add output layer
+            output_layer: OutputLayer = hyper_parameters.output_layer
+            name: str = output_layer.name
+            activation = "relu"
+            model.add(tf.keras.layers.Dense(units=1, activation=activation, name=name))
+
+            # Compile the model and print its summary
+            model.compile(loss=loss, optimizer=optimizer)
+            model.summary()
+
+            # Fit the model to the data
+            history = model.fit(features, labels, epochs=epochs, validation_split=test_split)
+            hist = pd.DataFrame(history.history)
+            hist["epoch"] = history.epoch
+            info(hist)
+
         return WorkerBuildModelsResponse(
             id=request.id,
             hostname=self.hostname,
