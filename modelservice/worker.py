@@ -105,10 +105,10 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             all_df: pd.DataFrame = pd.read_csv(csv_path, header=0)
             if hyper_parameters.normalize_inputs:
                 scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
-                features = pd.DataFrame(scaled, columns=all_df.columns)
-            else:
-                features = all_df[feature_fields]
-            labels = all_df.pop(label_field)
+                all_df = pd.DataFrame(scaled, columns=all_df.columns)
+
+            features = all_df[feature_fields]
+            labels = all_df[label_field]
 
             # Create Sequential model
             model = tf.keras.Sequential()
