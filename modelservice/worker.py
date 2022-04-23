@@ -8,6 +8,7 @@ import pandas as pd
 from modelservice import modelservice_pb2_grpc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
+from sklearn.preprocessing import MinMaxScaler
 
 from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, GetModelResponse, GisJoinMetadata, \
     WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
@@ -102,8 +103,12 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             # Load data
             csv_path: str = f"{self.data_dir}/{gis_join}.csv"
             all_df: pd.DataFrame = pd.read_csv(csv_path, header=0)
-            features: pd.DataFrame = all_df[feature_fields]
-            labels: pd.DataFrame = all_df[label_field]
+            if hyper_parameters.normalize_inputs:
+                scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
+                features = pd.DataFrame(scaled, columns=all_df.columns)
+            else:
+                features = all_df[feature_fields]
+            labels = all_df.pop(label_field)
 
             # Create Sequential model
             model = tf.keras.Sequential()
