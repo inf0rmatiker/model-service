@@ -105,7 +105,7 @@ def submit_worker_jobs(workers: list, request: BuildModelsRequest) -> list:
             stub = modelservice_pb2_grpc.WorkerStub(channel)
             request_copy = BuildModelsRequest()
             request_copy.CopyFrom(_request)
-            request_copy.allocations.extend(_worker.gis_joins)
+            request_copy.gis_joins.extend(_worker.gis_joins)
             return await stub.BuildModels(request_copy)
 
     loop = asyncio.new_event_loop()
