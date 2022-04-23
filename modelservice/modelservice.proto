@@ -20,7 +20,7 @@ service Master {
 service Worker {
 
   // Builds models at the worker level by training/testing on queried data
-  rpc BuildModels (BuildModelsRequest) returns (BuildModelsResponse) {}
+  rpc BuildModels (BuildModelsRequest) returns (WorkerBuildModelsResponse) {}
 
   // Queries the local built models at the worker level
   rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
