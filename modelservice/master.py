@@ -105,7 +105,6 @@ def submit_worker_jobs(workers: list, request: BuildModelsRequest) -> list:
             stub = modelservice_pb2_grpc.WorkerStub(channel)
             request_copy = BuildModelsRequest()
             request_copy.CopyFrom(_request)
-            del request_copy.allocations[:]
             request_copy.allocations.extend(_worker.gis_joins)
             return await stub.BuildModels(request_copy)
 
