@@ -72,7 +72,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
     def BuildModels(self, request: BuildModelsRequest, context) -> WorkerBuildModelsResponse:
         info(f"Received request to build models: {request}")
-        return BuildModelsResponse(
+        return WorkerBuildModelsResponse(
             id=request.id,
             hostname=self.hostname,
             duration_sec=0.0,  # TODO: Capture job profile
