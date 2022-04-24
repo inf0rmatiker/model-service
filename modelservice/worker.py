@@ -12,7 +12,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, GetModelResponse, GisJoinMetadata, \
     WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
-    LossType, ActivationType, HiddenLayer, OutputLayer
+    LossType, ActivationType, HiddenLayer, OutputLayer, EvaluationMetric
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -98,6 +98,8 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         else:
             loss = "mean_absolute_error"
 
+        evaluation_metrics: list = []  # list(EvaluationMetric)
+
         for gis_join in request.gis_joins:
 
             # Load data
@@ -139,12 +141,19 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             hist["epoch"] = history.epoch
             info(hist)
 
+            last_row = hist.loc[hist["epoch"] == epochs-1].values[0]
+
+            metric: EvaluationMetric = EvaluationMetric(
+                training_loss=hist
+            )
+
         return WorkerBuildModelsResponse(
             id=request.id,
             hostname=self.hostname,
             duration_sec=0.0,  # TODO: Capture job profile
-            error_occurred=True,
-            error_msg="Building models currently unimplemented"
+            error_occurred=False,
+            error_msg="",
+            validation_metrics=evaluation_metrics
         )
 
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
@@ -197,3 +206,5 @@ def run(master_hostname="localhost", master_port=50051, worker_port=50055, data_
     server.add_insecure_port(f"{hostname}:{worker_port}")
     server.start()
     server.wait_for_termination()
+
+
