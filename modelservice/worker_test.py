@@ -68,6 +68,8 @@ def main():
     training_loss = last_row[0]
     validation_loss = last_row[1]
     info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
+    model.save("/tmp/model_service/test_model.h5")
+
 
 
 if __name__ == "__main__":
