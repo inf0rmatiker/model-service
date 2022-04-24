@@ -100,8 +100,9 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
         evaluation_metrics: list = []  # list(EvaluationMetric)
 
+        count = 1
         for gis_join in request.gis_joins:
-            info(f"Loading data for GISJOIN {gis_join}...")
+            info(f"Loading data for GISJOIN {gis_join} ({count}/{len(request.gis_joins)})...")
 
             # Load data
             csv_path: str = f"{self.data_dir}/{gis_join}.csv"
@@ -161,7 +162,9 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 )
             )
             evaluation_metrics.append(metric)
+            count += 1
 
+        info(f"Finished training {count}/{len(request.gis_joins)} models. Returning results...")
         return WorkerBuildModelsResponse(
             id=request.id,
             hostname=self.hostname,
