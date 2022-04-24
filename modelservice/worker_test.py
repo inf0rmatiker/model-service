@@ -8,16 +8,6 @@ from logging import info, error
 from sklearn.preprocessing import MinMaxScaler
 
 
-def exports():
-    # Set CUDA and CUPTI paths
-    os.environ['CUDA_HOME'] = '/usr/local/cuda'
-    os.environ['PATH']= '/usr/local/cuda/bin:$PATH'
-    os.environ['CPATH'] = '/usr/local/cuda/include:$CPATH'
-    os.environ['LIBRARY_PATH'] = '/usr/local/cuda/lib64:$LIBRARY_PATH'
-    os.environ['LD_LIBRARY_PATH'] = '/usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH'
-    os.environ['LD_LIBRARY_PATH'] = '/usr/local/cuda/lib64:$LD_LIBRARY_PATH'
-
-
 # Strictly for testing
 def main():
     feature_fields: list = [
