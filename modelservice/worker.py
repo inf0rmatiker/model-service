@@ -100,6 +100,10 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
         evaluation_metrics: list = []  # list(EvaluationMetric)
 
+        # Make models dir for job id
+        models_dir: str = f"{self.data_dir}/{request.id}"
+        os.mkdir(models_dir)
+
         count = 1
         for gis_join in request.gis_joins:
             info(f"Loading data for GISJOIN {gis_join} ({count}/{len(request.gis_joins)})...")
@@ -162,6 +166,9 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 )
             )
             evaluation_metrics.append(metric)
+            model_path: str = f"{models_dir}/{gis_join}.h5"
+            model.save(model_path)
+            info(f"Saved model {model_path}")
             count += 1
 
         info(f"Finished training {count}/{len(request.gis_joins)} models. Returning results...")
