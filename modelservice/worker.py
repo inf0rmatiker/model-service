@@ -5,11 +5,13 @@ import signal
 import tensorflow as tf
 import pandas as pd
 
-from modelservice import modelservice_pb2_grpc
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
 from sklearn.preprocessing import MinMaxScaler
 
+from modelservice.profiler import Timer
+from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, GetModelResponse, GisJoinMetadata, \
     WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
     LossType, ActivationType, HiddenLayer, OutputLayer, EvaluationMetric
@@ -77,6 +79,9 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
     def BuildModels(self, request: BuildModelsRequest, context) -> WorkerBuildModelsResponse:
         info(f"Received request to build models: {request}")
 
+        worker_timer: Timer = Timer()
+        worker_timer.start()
+
         feature_fields: list = list(request.feature_fields)
         label_field: str = request.label_field
         hyper_parameters: HyperParameters = request.hyper_parameters
@@ -105,7 +110,10 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         os.mkdir(models_dir)
 
         count = 1
+        gis_join_timer: Timer = Timer()
         for gis_join in request.gis_joins:
+
+            gis_join_timer.start()
             info(f"Loading data for GISJOIN {gis_join} ({count}/{len(request.gis_joins)})...")
 
             # Load data
@@ -113,7 +121,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             all_df: pd.DataFrame = pd.read_csv(csv_path, header=0).drop("GISJOIN", 1)
             len_df: int = len(all_df.index)
             info(f"Loaded data for GISJOIN {gis_join}: {len_df} records")
-            if hyper_parameters.normalize_inputs:
+            if normalize_inputs:
                 scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
                 all_df = pd.DataFrame(scaled, columns=all_df.columns)
 
@@ -153,11 +161,12 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             training_loss = last_row[0]
             validation_loss = last_row[1]
             info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
+            gis_join_timer.stop()
 
             metric: EvaluationMetric = EvaluationMetric(
                 training_loss=training_loss,
                 validation_loss=validation_loss,
-                duration_sec=0.0,
+                duration_sec=gis_join_timer.elapsed,
                 error_occurred=False,
                 error_message="",
                 gis_join_metadata=GisJoinMetadata(
@@ -170,12 +179,14 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             model.save(model_path)
             info(f"Saved model {model_path}")
             count += 1
+            gis_join_timer.reset()
 
         info(f"Finished training {count}/{len(request.gis_joins)} models. Returning results...")
+        worker_timer.stop()
         return WorkerBuildModelsResponse(
             id=request.id,
             hostname=self.hostname,
-            duration_sec=0.0,  # TODO: Capture job profile
+            duration_sec=worker_timer.elapsed,
             error_occurred=False,
             error_msg="",
             validation_metrics=evaluation_metrics
