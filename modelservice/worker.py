@@ -101,10 +101,13 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         evaluation_metrics: list = []  # list(EvaluationMetric)
 
         for gis_join in request.gis_joins:
+            info(f"Loading data for GISJOIN {gis_join}...")
 
             # Load data
             csv_path: str = f"{self.data_dir}/{gis_join}.csv"
             all_df: pd.DataFrame = pd.read_csv(csv_path, header=0).drop("GISJOIN", 1)
+            len_df: int = len(all_df.index)
+            info(f"Loaded data for GISJOIN {gis_join}: {len_df} records")
             if hyper_parameters.normalize_inputs:
                 scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
                 all_df = pd.DataFrame(scaled, columns=all_df.columns)
@@ -141,11 +144,23 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             hist["epoch"] = history.epoch
             info(hist)
 
-            last_row = hist.loc[hist["epoch"] == epochs-1].values[0]
+            last_row = hist.loc[hist["epoch"] == epochs - 1].values[0]
+            training_loss = last_row[0]
+            validation_loss = last_row[1]
+            info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
 
             metric: EvaluationMetric = EvaluationMetric(
-                training_loss=hist
+                training_loss=training_loss,
+                validation_loss=validation_loss,
+                duration_sec=0.0,
+                error_occurred=False,
+                error_message="",
+                gis_join_metadata=GisJoinMetadata(
+                    gis_join=gis_join,
+                    count=len_df
+                )
             )
+            evaluation_metrics.append(metric)
 
         return WorkerBuildModelsResponse(
             id=request.id,
