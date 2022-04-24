@@ -175,7 +175,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 )
             )
             evaluation_metrics.append(metric)
-            model_path: str = f"{models_dir}/{gis_join}.h5"
+            model_path: str = f"{models_dir}/{gis_join}.tf"
             model.save(model_path)
             info(f"Saved model {model_path}")
             count += 1
