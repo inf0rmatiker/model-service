@@ -65,7 +65,9 @@ def main():
     info(hist)
 
     last_row = hist.loc[hist["epoch"] == epochs - 1].values[0]
-    pprint(last_row)
+    training_loss = last_row[0]
+    validation_loss = last_row[1]
+    info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
 
 
 if __name__ == "__main__":
