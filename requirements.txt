@@ -5,3 +5,4 @@ grpcio==1.43.0
 grpcio-tools==1.43.0
 pandas
 h5py
+pyyaml
