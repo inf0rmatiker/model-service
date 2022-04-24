@@ -2,6 +2,7 @@ import tensorflow as tf
 import pandas as pd
 from pprint import pprint
 
+import logging
 from logging import info, error
 from sklearn.preprocessing import MinMaxScaler
 
@@ -68,4 +69,6 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s %(levelname) - 4s %(message)s',
+                        level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
     main()
