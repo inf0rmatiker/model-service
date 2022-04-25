@@ -111,7 +111,7 @@ class Master(modelservice_pb2_grpc.MasterServicer):
             )
 
         info(f"Launching get worker model for {worker.hostname}...")
-        with grpc.aio.insecure_channel(f"{worker.hostname}:{worker.port}") as channel:
+        with grpc.insecure_channel(f"{worker.hostname}:{worker.port}") as channel:
             stub = modelservice_pb2_grpc.WorkerStub(channel)
             # TODO: Determine if we need to make a copy when we just do a pass through
             request_copy = GetModelRequest()
