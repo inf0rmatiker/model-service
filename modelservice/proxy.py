@@ -1,6 +1,7 @@
 import grpc
 from flask import Flask, request
 from google.protobuf.json_format import MessageToJson, Parse
+import hashlib
 from http import HTTPStatus
 from logging import info, error
 
@@ -56,6 +57,11 @@ def get_model(model_id, gis_join):
         # Submit validation job
         get_model_grpc_response: GetModelResponse = stub.GetModel(get_model_grpc_request)
         info(f"Get Model Response received: {get_model_grpc_response}")
+
+
+    sha1 = hashlib.sha1()
+    sha1.update(get_model_grpc_response.data)
+    print("proxy get_model data SHA1: {0}".format(sha1.hexdigest()))
 
     response_code: int = HTTPStatus.INTERNAL_SERVER_ERROR if get_model_grpc_response.error_occurred else HTTPStatus.OK
     return get_json_response(get_model_grpc_response), response_code
