@@ -206,11 +206,11 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
         shutil.make_archive(output_path, 'zip', model_path)
 
-        file = open(f"{model_path}.zip", 'rb')
+        file = open(f"{output_path}.zip", 'rb')
         fileContents = file.read()
         file.close()
 
-        # os.remove(f"{model_path}.zip")
+        os.remove(f"{output_path}.zip")
 
         return GetModelResponse(
             id=job_id,
