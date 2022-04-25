@@ -20,4 +20,4 @@ Compare time of global model to time of all local models.
 
 
 ## RQ-4
-
+Create variogram of global versus local model losses.
