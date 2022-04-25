@@ -204,13 +204,13 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         current_dir: str = os.getcwd()
         output_path: str = f"{current_dir}/{gis_join}.tf"
 
-        shutil.make_archive(model_path, 'zip', output_path)
+        shutil.make_archive(output_path, 'zip', model_path)
 
         file = open(f"{model_path}.zip", 'rb')
         fileContents = file.read()
         file.close()
 
-        os.remove(f"{model_path}.zip")
+        # os.remove(f"{model_path}.zip")
 
         return GetModelResponse(
             id=job_id,
