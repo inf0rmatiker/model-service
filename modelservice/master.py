@@ -100,7 +100,7 @@ class Master(modelservice_pb2_grpc.MasterServicer):
 
         try:
             worker: WorkerMetadata = self.gis_join_locations[gis_join]
-        except Exception err:
+        except Exception as err:
             print(err)
             return GetModelResponse(
                 id=request.id,
