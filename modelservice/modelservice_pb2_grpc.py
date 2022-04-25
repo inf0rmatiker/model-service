@@ -187,7 +187,7 @@ class WorkerStub(object):
         self.BuildModels = channel.unary_unary(
                 '/Worker/BuildModels',
                 request_serializer=modelservice__pb2.BuildModelsRequest.SerializeToString,
-                response_deserializer=modelservice__pb2.BuildModelsResponse.FromString,
+                response_deserializer=modelservice__pb2.WorkerBuildModelsResponse.FromString,
                 )
         self.GetModel = channel.unary_unary(
                 '/Worker/GetModel',
@@ -219,7 +219,7 @@ def add_WorkerServicer_to_server(servicer, server):
             'BuildModels': grpc.unary_unary_rpc_method_handler(
                     servicer.BuildModels,
                     request_deserializer=modelservice__pb2.BuildModelsRequest.FromString,
-                    response_serializer=modelservice__pb2.BuildModelsResponse.SerializeToString,
+                    response_serializer=modelservice__pb2.WorkerBuildModelsResponse.SerializeToString,
             ),
             'GetModel': grpc.unary_unary_rpc_method_handler(
                     servicer.GetModel,
@@ -249,7 +249,7 @@ class Worker(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Worker/BuildModels',
             modelservice__pb2.BuildModelsRequest.SerializeToString,
-            modelservice__pb2.BuildModelsResponse.FromString,
+            modelservice__pb2.WorkerBuildModelsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

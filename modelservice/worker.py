@@ -2,13 +2,19 @@ import os
 import socket
 import grpc
 import signal
+import tensorflow as tf
+import pandas as pd
 
-from modelservice import modelservice_pb2_grpc
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
+from sklearn.preprocessing import MinMaxScaler
 
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelRequest, GetModelResponse, \
-    GisJoinMetadata, WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse
+from modelservice.profiler import Timer
+from modelservice import modelservice_pb2_grpc
+from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, GetModelResponse, GisJoinMetadata, \
+    WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
+    LossType, ActivationType, HiddenLayer, OutputLayer, EvaluationMetric
 
 shared_executor = get_reusable_executor(max_workers=10, timeout=10)
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -19,7 +25,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         self.master_port = master_port
         self.hostname = hostname
         self.port = port
-        self.data_dir = data_dir
+        self.data_dir = data_dir[:-1] if data_dir.endswith("/") else data_dir
         self.is_registered = False
         self.local_gis_joins: dict = discover_local_gis_joins(data_dir)  # mapping of { gis_join -> <csv_path> }
 
@@ -61,8 +67,8 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 WorkerRegistrationRequest(
                     hostname=self.hostname,
                     port=self.port,
-                    local_gis_joins=gis_join_metadata)
-            )
+                    local_gis_joins=gis_join_metadata
+                ))
 
             if registration_response.success:
                 self.is_registered = True
@@ -72,59 +78,120 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
     def BuildModels(self, request: BuildModelsRequest, context) -> WorkerBuildModelsResponse:
         info(f"Received request to build models: {request}")
-        
-        # Save model
-        if not self.save_model(request):
-            return WorkerBuildModelsResponse(ok=False, hostname=self.hostname)
-			
-		tf_validator: TensorflowValidator = TensorflowValidator(request, shared_executor, self.local_gis_joins)
-		metrics = tf_validator.validate_gis_joins()
 
+        worker_timer: Timer = Timer()
+        worker_timer.start()
+
+        feature_fields: list = list(request.feature_fields)
+        label_field: str = request.label_field
+        hyper_parameters: HyperParameters = request.hyper_parameters
+        epochs: int = hyper_parameters.epochs
+        learning_rate: float = hyper_parameters.learning_rate
+        normalize_inputs: bool = hyper_parameters.normalize_inputs
+        train_split: float = hyper_parameters.train_split
+        test_split: float = 1.0 - train_split
+
+        if hyper_parameters.optimizer_type == OptimizerType.ADAM:
+            optimizer = tf.keras.optimizers.Adam(learning_rate)
         else:
-            return WorkerBuildModelsResponse(ok=False, hostname=self.hostname, error_msg="Building models currently unimplemented")
+            optimizer = tf.keras.optimizers.SGD(learning_rate)
 
-        # Create and return response from aggregated metrics
-        
-        return BuildModelsResponse(
+        if hyper_parameters.loss_type == LossType.MEAN_SQUARED_ERROR:
+            loss = "mean_squared_error"
+        elif hyper_parameters.loss_type == LossType.MEAN_SQUARED_ERROR:
+            loss = "mean_squared_error"
+        else:
+            loss = "mean_absolute_error"
+
+        evaluation_metrics: list = []  # list(EvaluationMetric)
+
+        # Make models dir for job id
+        models_dir: str = f"{self.data_dir}/{request.id}"
+        os.mkdir(models_dir)
+
+        count = 1
+        gis_join_timer: Timer = Timer()
+        for gis_join in request.gis_joins:
+
+            gis_join_timer.start()
+            info(f"Loading data for GISJOIN {gis_join} ({count}/{len(request.gis_joins)})...")
+
+            # Load data
+            csv_path: str = f"{self.data_dir}/{gis_join}.csv"
+            all_df: pd.DataFrame = pd.read_csv(csv_path, header=0).drop("GISJOIN", 1)
+            len_df: int = len(all_df.index)
+            info(f"Loaded data for GISJOIN {gis_join}: {len_df} records")
+            if normalize_inputs:
+                scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
+                all_df = pd.DataFrame(scaled, columns=all_df.columns)
+
+            features = all_df[feature_fields]
+            labels = all_df[label_field]
+
+            # Create Sequential model
+            model = tf.keras.Sequential()
+
+            # Add input layer
+            model.add(tf.keras.Input(shape=(len(request.feature_fields))))
+
+            # Add hidden layers
+            for hidden_layer in hyper_parameters.hidden_layers:
+                name: str = hidden_layer.name
+                units: int = hidden_layer.units
+                activation = "relu"
+                model.add(tf.keras.layers.Dense(units=units, activation=activation, name=name))
+
+            # Add output layer
+            output_layer: OutputLayer = hyper_parameters.output_layer
+            name: str = output_layer.name
+            activation = "relu"
+            model.add(tf.keras.layers.Dense(units=1, activation=activation, name=name))
+
+            # Compile the model and print its summary
+            model.compile(loss=loss, optimizer=optimizer)
+            model.summary()
+
+            # Fit the model to the data
+            history = model.fit(features, labels, epochs=epochs, validation_split=test_split)
+            hist = pd.DataFrame(history.history)
+            hist["epoch"] = history.epoch
+            info(hist)
+
+            last_row = hist.loc[hist["epoch"] == epochs - 1].values[0]
+            training_loss = last_row[0]
+            validation_loss = last_row[1]
+            info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
+            gis_join_timer.stop()
+
+            metric: EvaluationMetric = EvaluationMetric(
+                training_loss=training_loss,
+                validation_loss=validation_loss,
+                duration_sec=gis_join_timer.elapsed,
+                error_occurred=False,
+                error_message="",
+                gis_join_metadata=GisJoinMetadata(
+                    gis_join=gis_join,
+                    count=len_df
+                )
+            )
+            evaluation_metrics.append(metric)
+            model_path: str = f"{models_dir}/{gis_join}.tf"
+            model.save(model_path)
+            info(f"Saved model {model_path}")
+            count += 1
+            gis_join_timer.reset()
+
+        info(f"Finished training {count}/{len(request.gis_joins)} models. Returning results...")
+        worker_timer.stop()
+        return WorkerBuildModelsResponse(
             id=request.id,
             hostname=self.hostname,
-            duration_sec=0.0,  # TODO: Capture job profile
-            error_occurred=True,
-            error_msg="Building models currently unimplemented"
+            duration_sec=worker_timer.elapsed,
+            error_occurred=False,
+            error_msg="",
+            validation_metrics=evaluation_metrics
         )
     
-    def save_model(self, request: BuildModelsRequest) -> bool:
-        ok = True
-
-        # Make the directory
-        model_dir = f"{self.saved_models_path}/{request.id}"
-        os.mkdir(model_dir)
-        info(f"Created directory {model_dir}")
-
-        file_extension = "pkl"  # Default for Scikit-Learn pickle type
-
-        # Validate the file type with the framework
-        
-        # Saved Tensorflow models have to be either SavedModel or HDF5 format:
-        # https://www.tensorflow.org/tutorials/keras/save_and_load#save_the_entire_model
-        if request.model_file.type == ModelFileType.TENSORFLOW_SAVED_MODEL_ZIP:
-            zip_file = zipfile.ZipFile(io.BytesIO(request.model_file.data))
-            zip_file.extractall(model_dir)
-            return ok
-        elif request.model_file.type == ModelFileType.TENSORFLOW_HDF5:
-            file_extension = "h5"
-        else:
-            return not ok
-
-
-        # Save the model with appropriate extension
-        model_file_path = f"{model_dir}/{request.id}.{file_extension}"
-        with open(model_file_path, "wb") as binary_file:
-            binary_file.write(request.model_file.data)
-
-        info(f"Finished saving model to {model_file_path}")
-        return ok
-
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
         info(f"Received request to retrieve model(s)")
         return GetModelResponse(
@@ -175,3 +242,5 @@ def run(master_hostname="localhost", master_port=50051, worker_port=50055, data_
     server.add_insecure_port(f"{hostname}:{worker_port}")
     server.start()
     server.wait_for_termination()
+
+

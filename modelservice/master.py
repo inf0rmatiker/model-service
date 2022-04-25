@@ -5,6 +5,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from logging import info, error
 
+from modelservice.profiler import Timer
 from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import WorkerRegistrationRequest, WorkerRegistrationResponse, BuildModelsRequest, \
     GetModelRequest, GetModelResponse, BuildModelsResponse, WorkerBuildModelsResponse
@@ -68,6 +69,8 @@ class Master(modelservice_pb2_grpc.MasterServicer):
 
     def BuildModels(self, request: BuildModelsRequest, context) -> BuildModelsResponse:
         info(f"Received request to build models: {request}")
+        master_timer: Timer = Timer()
+        master_timer.start()
 
         # Generate and set unique job ID
         job_id: str = generate_job_id()
@@ -77,9 +80,10 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         worker_responses: list = submit_worker_jobs(known_workers, request)
 
         info(f"Jobs completed, returning results")
+        master_timer.stop()
         return BuildModelsResponse(
             id=job_id,
-            duration_sec=0.0,       # TODO: Add actual job profile
+            duration_sec=master_timer.elapsed,
             error_occurred=False,   # TODO: Check for errors
             error_msg="",
             worker_responses=worker_responses
@@ -105,8 +109,7 @@ def submit_worker_jobs(workers: list, request: BuildModelsRequest) -> list:
             stub = modelservice_pb2_grpc.WorkerStub(channel)
             request_copy = BuildModelsRequest()
             request_copy.CopyFrom(_request)
-            del request_copy.allocations[:]
-            request_copy.allocations.extend(_worker.gis_joins)
+            request_copy.gis_joins.extend(_worker.gis_joins)
             return await stub.BuildModels(request_copy)
 
     loop = asyncio.new_event_loop()
