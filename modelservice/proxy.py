@@ -61,7 +61,7 @@ def get_model(model_id, gis_join):
 
     sha1 = hashlib.sha1()
     sha1.update(get_model_grpc_response.data)
-    print("proxy get_model data SHA1: {0}".format(sha1.hexdigest()))
+    info("proxy get_model data SHA1: {0}".format(sha1.hexdigest()))
 
     response_code: int = HTTPStatus.INTERNAL_SERVER_ERROR if get_model_grpc_response.error_occurred else HTTPStatus.OK
     return get_json_response(get_model_grpc_response), response_code

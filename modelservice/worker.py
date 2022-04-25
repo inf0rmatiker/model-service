@@ -215,7 +215,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
 
         sha1 = hashlib.sha1()
         sha1.update(fileContents)
-        print("GetModel fileContents SHA1: {0}".format(sha1.hexdigest()))
+        info("GetModel fileContents SHA1: {0}".format(sha1.hexdigest()))
 
         return GetModelResponse(
             model_id=job_id,
