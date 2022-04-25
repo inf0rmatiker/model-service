@@ -58,7 +58,7 @@ def get_model(model_id, gis_join):
         info(f"Get Model Response received: {get_model_grpc_response}")
 
     response_code: int = HTTPStatus.INTERNAL_SERVER_ERROR if get_model_grpc_response.error_occurred else HTTPStatus.OK
-    return build_json_response(get_model_grpc_response), response_code
+    return get_json_response(get_model_grpc_response), response_code
 
 
 @app.route("/model", methods=["POST"])
@@ -90,3 +90,7 @@ def submit_job():
 
 def build_json_response(build_models_grpc_response: BuildModelsResponse) -> str:
     return MessageToJson(build_models_grpc_response, preserving_proto_field_name=True)
+
+
+def get_json_response(get_model_grpc_response: GetModelResponse) -> str:
+    return MessageToJson(get_model_grpc_response, preserving_proto_field_name=True)
