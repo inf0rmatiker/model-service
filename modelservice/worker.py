@@ -213,7 +213,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         os.remove(f"{output_path}.zip")
 
         return GetModelResponse(
-            id=job_id,
+            model_id=job_id,
             error_occurred=False,
             error_msg="",
             filename=f"{gis_join}.tf.zip",
