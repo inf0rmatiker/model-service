@@ -181,7 +181,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             count += 1
             gis_join_timer.reset()
 
-        info(f"Finished training {count}/{len(request.gis_joins)} models. Returning results...")
+        info(f"Finished training {count-1}/{len(request.gis_joins)} models. Returning results...")
         worker_timer.stop()
         return WorkerBuildModelsResponse(
             id=request.id,
