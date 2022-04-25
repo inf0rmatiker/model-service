@@ -4,6 +4,7 @@ import grpc
 import signal
 import tensorflow as tf
 import pandas as pd
+import shutil
 
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -199,13 +200,22 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         gis_join: str = request.gis_joins
         model_dir: str = f"{self.data_dir}/{job_id}"
         model_path: str = f"{model_dir}/{gis_join}.tf"
+        output_filename: str = f"{gis_join}.tf"
+
+        shutil.make_archive(model_path, 'zip', model_path)
+
+        file = open(f"{model_path}.zip", 'rb')
+        fileContents = file.read()
+        file.close()
+
+        os.remove(f"{model_path}.zip")
 
         return GetModelResponse(
             id=job_id,
             error_occurred=False,
             error_msg="",
-            filename=f"{gis_join}.tf",
-            data
+            filename=f"{gis_join}.tf.zip",
+            data=fileContents
         )
 
 
