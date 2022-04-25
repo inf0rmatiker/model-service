@@ -95,7 +95,20 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         # job_id: str = request.model_id
         gis_join: str = request.gis_joins
 
-        worker: WorkerMetadata = self.gis_join_locations[gis_join]
+        for join in self.gis_join_locations:
+            print(join)
+
+        try:
+            worker: WorkerMetadata = self.gis_join_locations[gis_join]
+        except Exception err:
+            print(err)
+            return GetModelResponse(
+                id=request.id,
+                error_occurred=True,
+                error_msg="Error retrieving requested GIS join",
+                filename="",
+                data=""
+            )
 
         info(f"Launching get worker model for {worker.hostname}...")
         with grpc.aio.insecure_channel(f"{worker.hostname}:{worker.port}") as channel:
