@@ -16,7 +16,7 @@ from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, G
     WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
     LossType, ActivationType, HiddenLayer, OutputLayer, EvaluationMetric
 
-
+shared_executor = get_reusable_executor(max_workers=10, timeout=10)
 class Worker(modelservice_pb2_grpc.WorkerServicer):
 
     def __init__(self, master_hostname: str, master_port: int, hostname: str, port: int, data_dir: str):
@@ -191,7 +191,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             error_msg="",
             validation_metrics=evaluation_metrics
         )
-
+    
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
         info(f"Received request to retrieve model(s)")
         return GetModelResponse(
