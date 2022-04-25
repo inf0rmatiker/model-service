@@ -200,7 +200,9 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         gis_join: str = request.gis_joins
         model_dir: str = f"{self.data_dir}/{job_id}"
         model_path: str = f"{model_dir}/{gis_join}.tf"
-        output_filename: str = f"{gis_join}.tf"
+
+        current_dir: str = os.getcwd()
+        output_path: str = f"{current_dir}/{gis_join}.tf"
 
         shutil.make_archive(model_path, 'zip', model_path)
 
