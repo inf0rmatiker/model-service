@@ -193,11 +193,19 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         )
 
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
-        info(f"Received request to retrieve model(s)")
+        info(f"Received request to retrieve model")
+
+        job_id: str = request.model_id
+        gis_join: str = request.gis_joins
+        model_dir: str = f"{self.data_dir}/{job_id}"
+        model_path: str = f"{model_dir}/{gis_join}.tf"
+
         return GetModelResponse(
-            id=request.id,
-            error_occurred=True,
-            error_msg="Fetching models currently unimplemented"
+            id=job_id,
+            error_occurred=False,
+            error_msg="",
+            filename=f"{gis_join}.tf",
+            data
         )
 
 
@@ -242,5 +250,3 @@ def run(master_hostname="localhost", master_port=50051, worker_port=50055, data_
     server.add_insecure_port(f"{hostname}:{worker_port}")
     server.start()
     server.wait_for_termination()
-
-

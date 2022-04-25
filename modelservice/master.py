@@ -90,8 +90,21 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         )
 
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
-        info(f"Received request to retrieve model(s)")
-        return GetModelResponse()
+        info(f"Received request to retrieve model")
+
+        # job_id: str = request.model_id
+        gis_join: str = request.gis_joins
+
+        worker: WorkerMetadata = self.gis_join_locations[gis_join]
+
+        info(f"Launching get worker model for {worker.hostname}...")
+        with grpc.aio.insecure_channel(f"{worker.hostname}:{worker.port}") as channel:
+            stub = modelservice_pb2_grpc.WorkerStub(channel)
+            # TODO: Determine if we need to make a copy when we just do a pass through
+            request_copy = GetModelRequest()
+            request_copy.CopyFrom(request)
+
+            return stub.GetModel(request_copy)
 
 
 def generate_job_id() -> str:

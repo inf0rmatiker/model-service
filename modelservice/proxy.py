@@ -5,7 +5,7 @@ from http import HTTPStatus
 from logging import info, error
 
 from modelservice import modelservice_pb2_grpc
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, HyperParameters
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelResponse, GetModelRequest, HyperParameters
 
 app = Flask(__name__)
 
@@ -34,14 +34,31 @@ def run(master_hostname="localhost", master_port=50051, flask_port=5000):
     app.run(host="0.0.0.0", port=flask_port)  # Entrypoint
 
 
-@app.route("/model", methods=["GET"])
-def get_model():
+@app.route("/model/<model_id>/gis-join/<gis_join>", methods=["GET"])
+def get_model(model_id, gis_join):
 
-    # TODO Parse query from HTTP JSON -> build gRPC request to Master
+    # Try to cast request data to proper types and return error if there are any issues
+    try:
+        get_model_grpc_request: GetModelRequest = GetModelRequest(
+            model_id=model_id,
+            gis_joins=gis_join
+        )
+    except Exception as err:
+        print("try-except exception for casting GET model request values")
+        print(err)
+        return "There was a problem processing your request. Please check that you have requested a valid model ID and GIS join."
 
-    # TODO Send gRPC request to master and relay response back to client
+    with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
+        stub: modelservice_pb2_grpc.MasterStub = modelservice_pb2_grpc.MasterStub(channel)
 
-    return "At some point, your model will be returned from this endpoint"
+        info(get_model_grpc_request)
+
+        # Submit validation job
+        get_model_grpc_response: GetModelResponse = stub.GetModel(get_model_grpc_request)
+        info(f"Get Model Response received: {get_model_grpc_response}")
+
+    response_code: int = HTTPStatus.INTERNAL_SERVER_ERROR if get_model_grpc_response.error_occurred else HTTPStatus.OK
+    return build_json_response(get_model_grpc_response), response_code
 
 
 @app.route("/model", methods=["POST"])
