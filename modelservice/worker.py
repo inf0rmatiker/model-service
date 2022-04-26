@@ -154,7 +154,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             model.summary()
 
             # Fit the model to the data
-            history = model.fit(features, labels, epochs=epochs, validation_split=test_split)
+            history = model.fit(features, labels, batch_size=64, epochs=epochs, validation_split=test_split)
             hist = pd.DataFrame(history.history)
             hist["epoch"] = history.epoch
             info(hist)
