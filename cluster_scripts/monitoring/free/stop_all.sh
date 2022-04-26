@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR="$HOME/model-service/cluster-scripts/monitoring/free"
+SCRIPT_DIR="$HOME/model-service/cluster_scripts/monitoring/free"
 
 readarray -t HOSTS < "$SCRIPT_DIR/hosts.txt"
 OUTPUT_DIR=$1
