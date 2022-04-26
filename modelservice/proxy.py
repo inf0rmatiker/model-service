@@ -42,7 +42,7 @@ def get_model(model_id, gis_join):
     try:
         get_model_grpc_request: GetModelRequest = GetModelRequest(
             model_id=model_id,
-            gis_joins=gis_join
+            gis_join=gis_join
         )
     except Exception as err:
         print("try-except exception for casting GET model request values")

@@ -198,7 +198,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         info(f"Received request to retrieve model")
 
         job_id: str = request.model_id
-        gis_join: str = request.gis_joins
+        gis_join: str = request.gis_join
         model_dir: str = f"{self.data_dir}/{job_id}"
         model_path: str = f"{model_dir}/{gis_join}.tf"
 
