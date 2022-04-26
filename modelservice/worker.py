@@ -205,13 +205,23 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         current_dir: str = os.getcwd()
         output_path: str = f"{current_dir}/{gis_join}.tf"
 
-        shutil.make_archive(output_path, 'zip', model_path)
+        try:
+            shutil.make_archive(output_path, 'zip', model_path)
 
-        file = open(f"{output_path}.zip", 'rb')
-        fileContents = file.read()
-        file.close()
+            file = open(f"{output_path}.zip", 'rb')
+            fileContents = file.read()
+            file.close()
 
-        os.remove(f"{output_path}.zip")
+            os.remove(f"{output_path}.zip")
+        except Exception as err:
+            print(err)
+            return GetModelResponse(
+                model_id=job_id,
+                error_occurred=True,
+                error_msg="Error retrieving requested GIS join",
+                filename="",
+                data=""
+            )
 
         # SHA1 generation for verifying and validating data received
         # sha1 = hashlib.sha1()

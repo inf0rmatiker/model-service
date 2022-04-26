@@ -100,7 +100,7 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         except Exception as err:
             print(err)
             return GetModelResponse(
-                id=request.id,
+                model_id=request.id,
                 error_occurred=True,
                 error_msg="Error retrieving requested GIS join",
                 filename="",
