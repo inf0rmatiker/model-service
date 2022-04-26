@@ -92,6 +92,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         normalize_inputs: bool = hyper_parameters.normalize_inputs
         train_split: float = hyper_parameters.train_split
         test_split: float = 1.0 - train_split
+        batch_size: int = hyper_parameters.batch_size
 
         if hyper_parameters.optimizer_type == OptimizerType.ADAM:
             optimizer = tf.keras.optimizers.Adam(learning_rate)
@@ -154,7 +155,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             model.summary()
 
             # Fit the model to the data
-            history = model.fit(features, labels, batch_size=64, epochs=epochs, validation_split=test_split)
+            history = model.fit(features, labels, batch_size=batch_size, epochs=epochs, validation_split=test_split)
             hist = pd.DataFrame(history.history)
             hist["epoch"] = history.epoch
             info(hist)
