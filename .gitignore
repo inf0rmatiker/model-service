@@ -135,3 +135,5 @@ dmypy.json
 bin/
 lib64
 pyvenv.cfg
+
+nohup.out
