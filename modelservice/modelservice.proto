@@ -55,7 +55,7 @@ message WorkerBuildModelsResponse {
 
 message GetModelRequest {
   string model_id = 1;
-  string gis_joins = 2;
+  string gis_join = 2;
 }
 
 message GetModelResponse {
@@ -92,16 +92,17 @@ message GisJoinMetadata {
 
 message HyperParameters {
   int32 epochs = 1;
-  float learning_rate = 2;
-  bool normalize_inputs = 3;
-  float train_split = 4;  // Fraction of data to use as training data. Default = 0.8
-  OptimizerType optimizer_type = 5;
-  LossType loss_type = 6;
+  int32 batch_size = 2;
+  float learning_rate = 3;
+  bool normalize_inputs = 4;
+  float train_split = 5;  // Fraction of data to use as training data. Default = 0.8
+  OptimizerType optimizer_type = 6;
+  LossType loss_type = 7;
 
   // Model specification
-  InputLayer input_layer = 7;
-  repeated HiddenLayer hidden_layers = 8;
-  OutputLayer output_layer = 9;
+  InputLayer input_layer = 8;
+  repeated HiddenLayer hidden_layers = 9;
+  OutputLayer output_layer = 10;
 }
 
 message InputLayer {
