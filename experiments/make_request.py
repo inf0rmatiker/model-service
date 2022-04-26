@@ -11,7 +11,7 @@ port = 5000
 
 request_str = json.dumps(request_obj)
 
-conn = http.client.HTTPSConnection(host, port)
+conn = http.client.HTTPConnection(host, port)
 payload = request_str
 headers = {
     'Content-Type': 'application/json'
