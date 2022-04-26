@@ -90,8 +90,28 @@ class Master(modelservice_pb2_grpc.MasterServicer):
         )
 
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
-        info(f"Received request to retrieve model(s)")
-        return GetModelResponse()
+        info(f"Received request to retrieve model")
+
+        # job_id: str = request.model_id
+        gis_join: str = request.gis_join
+
+        try:
+            worker: WorkerMetadata = self.gis_join_locations[gis_join]
+        except Exception as err:
+            print(err)
+            return GetModelResponse(
+                model_id=request.id,
+                error_occurred=True,
+                error_msg="Error retrieving requested GIS join",
+                filename="",
+                data=""
+            )
+
+        info(f"Launching get worker model for {worker.hostname}...")
+        with grpc.insecure_channel(f"{worker.hostname}:{worker.port}") as channel:
+            stub = modelservice_pb2_grpc.WorkerStub(channel)
+
+            return stub.GetModel(request)
 
 
 def generate_job_id() -> str:

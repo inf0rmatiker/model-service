@@ -55,7 +55,7 @@ message WorkerBuildModelsResponse {
 
 message GetModelRequest {
   string model_id = 1;
-  string gis_joins = 2;
+  string gis_join = 2;
 }
 
 message GetModelResponse {

@@ -1,9 +1,11 @@
 import os
 import socket
 import grpc
+# import hashlib
 import signal
 import tensorflow as tf
 import pandas as pd
+import shutil
 
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -193,11 +195,45 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         )
     
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
-        info(f"Received request to retrieve model(s)")
+        info(f"Received request to retrieve model")
+
+        job_id: str = request.model_id
+        gis_join: str = request.gis_join
+        model_dir: str = f"{self.data_dir}/{job_id}"
+        model_path: str = f"{model_dir}/{gis_join}.tf"
+
+        current_dir: str = os.getcwd()
+        output_path: str = f"{current_dir}/{gis_join}.tf"
+
+        try:
+            shutil.make_archive(output_path, 'zip', model_path)
+
+            file = open(f"{output_path}.zip", 'rb')
+            fileContents = file.read()
+            file.close()
+
+            os.remove(f"{output_path}.zip")
+        except Exception as err:
+            print(err)
+            return GetModelResponse(
+                model_id=job_id,
+                error_occurred=True,
+                error_msg="Error retrieving requested GIS join",
+                filename="",
+                data=""
+            )
+
+        # SHA1 generation for verifying and validating data received
+        # sha1 = hashlib.sha1()
+        # sha1.update(fileContents)
+        # info("GetModel fileContents SHA1: {0}".format(sha1.hexdigest()))
+
         return GetModelResponse(
-            id=request.id,
-            error_occurred=True,
-            error_msg="Fetching models currently unimplemented"
+            model_id=job_id,
+            error_occurred=False,
+            error_msg="",
+            filename=f"{gis_join}.tf.zip",
+            data=fileContents
         )
 
 
@@ -242,5 +278,3 @@ def run(master_hostname="localhost", master_port=50051, worker_port=50055, data_
     server.add_insecure_port(f"{hostname}:{worker_port}")
     server.start()
     server.wait_for_termination()
-
-
