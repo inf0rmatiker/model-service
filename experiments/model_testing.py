@@ -115,7 +115,7 @@ def main():
     cuda_exports()
 
     # Hyperparameter search
-    batch_sizes = [128, 512]
+    batch_sizes = [64]
     hl1_num_units = [16, 32, 64]
     hl2_num_units = [16, 32, 64]
     learning_rates = [0.0001, 0.001, 0.01]
