@@ -19,7 +19,7 @@ echo "Starting omni for $BENCHMARK_NAME benchmark..."
 
 sleep 5
 
-python3.8 make_request.py > "$BENCHMARK_NAME/response.json"
+python3.8 make_request.py "$BENCHMARK_NAME/request.json" > "$BENCHMARK_NAME/response.json"
 
 sleep 5
 

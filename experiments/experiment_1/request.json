@@ -1,0 +1,29 @@
+{
+  "label_field": "SOIL_TEMPERATURE_0_TO_01_M_BELOW_SURFACE_KELVIN",
+  "feature_fields": [
+    "PRESSURE_REDUCED_TO_MSL_PASCAL",
+    "VISIBILITY_AT_SURFACE_METERS",
+    "VISIBILITY_AT_CLOUD_TOP_METERS",
+    "WIND_GUST_SPEED_AT_SURFACE_METERS_PER_SEC",
+    "PRESSURE_AT_SURFACE_PASCAL",
+    "TEMPERATURE_AT_SURFACE_KELVIN",
+    "DEWPOINT_TEMPERATURE_2_METERS_ABOVE_SURFACE_KELVIN",
+    "RELATIVE_HUMIDITY_2_METERS_ABOVE_SURFACE_PERCENT",
+    "ALBEDO_PERCENT",
+    "TOTAL_CLOUD_COVER_PERCENT"
+  ],
+  "hyper_parameters": {
+    "epochs": 5,
+    "learning_rate": 0.001,
+    "normalize_inputs": true,
+    "train_split": 0.8,
+    "optimizer_type": "ADAM",
+    "loss_type": "MEAN_SQUARED_ERROR",
+    "input_layer": { "activation": "RELU", "name": "input_layer_0" },
+    "hidden_layers": [
+      { "activation": "RELU", "units": 32, "name": "hidden_layer_1" },
+      { "activation": "RELU", "units": 16, "name": "hidden_layer_2" }
+    ],
+    "output_layer": { "activation": "RELU", "name": "output_layer_3" }
+  }
+}
