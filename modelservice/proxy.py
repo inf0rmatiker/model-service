@@ -6,7 +6,8 @@ from http import HTTPStatus
 from logging import info, error
 
 from modelservice import modelservice_pb2_grpc
-from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelResponse, GetModelRequest, HyperParameters
+from modelservice.modelservice_pb2 import BuildModelsRequest, BuildModelsResponse, GetModelResponse, GetModelRequest, \
+    HyperParameters, ValidateModelsRequest, ValidateModelsResponse
 
 app = Flask(__name__)
 
@@ -67,6 +68,24 @@ def get_model(model_id, gis_join):
     return get_json_response(get_model_grpc_response), response_code
 
 
+@app.route("/validate/<job_id>", methods=["GET"])
+def validate(job_id):
+    validation_request = ValidateModelsRequest(
+        id=job_id
+    )
+
+    with grpc.insecure_channel(f"{app.config['MASTER_HOSTNAME']}:{app.config['MASTER_PORT']}") as channel:
+        stub: modelservice_pb2_grpc.MasterStub = modelservice_pb2_grpc.MasterStub(channel)
+
+        info(validation_request)
+
+        # Submit validation job
+        validation_response: ValidateModelsResponse = stub.ValidateModels(validation_request)
+        info(f"Get Model Response received: {validation_response}")
+
+        return validation_response, HTTPStatus.OK
+
+
 @app.route("/model", methods=["POST"])
 def submit_job():
     request_data_string: str = request.json
@@ -100,3 +119,7 @@ def build_json_response(build_models_grpc_response: BuildModelsResponse) -> str:
 
 def get_json_response(get_model_grpc_response: GetModelResponse) -> str:
     return MessageToJson(get_model_grpc_response, preserving_proto_field_name=True)
+
+
+def validate_model_json_response(response: ValidateModelsResponse) -> str:
+    return MessageToJson(response, preserving_proto_field_name=True)
