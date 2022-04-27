@@ -93,15 +93,17 @@ class Master(modelservice_pb2_grpc.MasterServicer):
     def ValidateModels(self, request: ValidateModelsRequest, context) -> ValidateModelsResponse:
         info(f"Received request to validate models: {request}")
 
-        # known_workers: list = list(self.tracked_workers.values())
-        # worker_responses: list = submit_validation_worker_jobs(known_workers, request)
-        # all_evaluation_metrics = []
-        # for worker_response in worker_responses:
-        #
-        #
-        # info(f"Jobs completed, returning results")
+        known_workers: list = list(self.tracked_workers.values())
+        worker_responses: list = submit_validation_worker_jobs(known_workers, request)
+        all_evaluation_metrics = []
+        for worker_response in worker_responses:
+            for metric in worker_response["validation_metrics"]:
+                all_evaluation_metrics.append(metric)
+
+        info(f"Jobs completed, returning results")
         return ValidateModelsResponse(
-            id=request.id
+            id=request.id,
+            validation_metrics=all_evaluation_metrics
         )
 
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:

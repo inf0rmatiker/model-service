@@ -94,10 +94,11 @@ message WorkerRegistrationResponse {
 message EvaluationMetric {
   float training_loss = 1;
   float validation_loss = 2;
-  float duration_sec = 3;
-  bool error_occurred = 4;
-  string error_message = 5;
-  GisJoinMetadata gis_join_metadata = 6;
+  float true_loss = 3;
+  float duration_sec = 4;
+  bool error_occurred = 5;
+  string error_message = 6;
+  GisJoinMetadata gis_join_metadata = 7;
 }
 
 message GisJoinMetadata {

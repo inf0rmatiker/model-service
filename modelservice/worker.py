@@ -9,7 +9,7 @@ import shutil
 import numpy as np
 
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from logging import info, error
 from sklearn.preprocessing import MinMaxScaler
 
@@ -88,24 +88,23 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         feature_fields: list = list(request.feature_fields)
         label_field: str = request.label_field
         hyper_parameters: HyperParameters = request.hyper_parameters
-        epochs: int = hyper_parameters.epochs
-        learning_rate: float = hyper_parameters.learning_rate
-        normalize_inputs: bool = hyper_parameters.normalize_inputs
         train_split: float = hyper_parameters.train_split
-        test_split: float = 1.0 - train_split
-        batch_size: int = hyper_parameters.batch_size
 
-        if hyper_parameters.optimizer_type == OptimizerType.ADAM:
-            optimizer = tf.keras.optimizers.Adam(learning_rate)
-        else:
-            optimizer = tf.keras.optimizers.SGD(learning_rate)
-
-        if hyper_parameters.loss_type == LossType.MEAN_SQUARED_ERROR:
-            loss = "mean_squared_error"
-        elif hyper_parameters.loss_type == LossType.MEAN_SQUARED_ERROR:
-            loss = "mean_squared_error"
-        else:
-            loss = "mean_absolute_error"
+        hyper_params: dict = {
+            "epochs": hyper_parameters.epochs,
+            "learning_rate": hyper_parameters.learning_rate,
+            "normalize_inputs": hyper_parameters.normalize_inputs,
+            "train_split": hyper_parameters.train_split,
+            "test_split": 1.0 - hyper_parameters.train_split,
+            "batch_size": hyper_parameters.batch_size,
+            "hidden_layers": []
+        }
+        for hidden_layer in hyper_parameters.hidden_layers:
+            hyper_params["hidden_layers"].append({
+                "activation": "relu",
+                "name": hidden_layer.name,
+                "units": hidden_layer.units
+            })
 
         evaluation_metrics: list = []  # list(EvaluationMetric)
 
@@ -114,76 +113,45 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         os.mkdir(models_dir)
 
         count = 1
-        gis_join_timer: Timer = Timer()
-        for gis_join in request.gis_joins:
-
-            gis_join_timer.start()
-            info(f"Loading data for GISJOIN {gis_join} ({count}/{len(request.gis_joins)})...")
-
-            # Load data
-            csv_path: str = f"{self.data_dir}/{gis_join}.csv"
-            all_df: pd.DataFrame = pd.read_csv(csv_path, header=0).drop("GISJOIN", 1)
-            len_df: int = len(all_df.index)
-            info(f"Loaded data for GISJOIN {gis_join}: {len_df} records")
-            if normalize_inputs:
-                scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
-                all_df = pd.DataFrame(scaled, columns=all_df.columns)
-
-            features = all_df[feature_fields]
-            labels = all_df[label_field]
-
-            # Create Sequential model
-            model = tf.keras.Sequential()
-
-            # Add input layer
-            model.add(tf.keras.Input(shape=(len(request.feature_fields))))
-
-            # Add hidden layers
-            for hidden_layer in hyper_parameters.hidden_layers:
-                name: str = hidden_layer.name
-                units: int = hidden_layer.units
-                activation = "relu"
-                model.add(tf.keras.layers.Dense(units=units, activation=activation, name=name))
-
-            # Add output layer
-            output_layer: OutputLayer = hyper_parameters.output_layer
-            name: str = output_layer.name
-            activation = "relu"
-            model.add(tf.keras.layers.Dense(units=1, activation=activation, name=name))
-
-            # Compile the model and print its summary
-            model.compile(loss=loss, optimizer=optimizer)
-            model.summary()
-
-            # Fit the model to the data
-            history = model.fit(features, labels, batch_size=batch_size, epochs=epochs, validation_split=test_split)
-            hist = pd.DataFrame(history.history)
-            hist["epoch"] = history.epoch
-            info(hist)
-
-            last_row = hist.loc[hist["epoch"] == epochs - 1].values[0]
-            training_loss = last_row[0]
-            validation_loss = last_row[1]
-            info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
-            gis_join_timer.stop()
-
-            metric: EvaluationMetric = EvaluationMetric(
-                training_loss=training_loss,
-                validation_loss=validation_loss,
-                duration_sec=gis_join_timer.elapsed,
-                error_occurred=False,
-                error_message="",
-                gis_join_metadata=GisJoinMetadata(
-                    gis_join=gis_join,
-                    count=len_df
+        executors_list = []
+        with ProcessPoolExecutor(max_workers=8) as executor:
+            for gis_join in request.gis_joins:
+                executors_list.append(
+                    executor.submit(
+                        build_and_train_model,
+                        request.id,
+                        hyper_params,
+                        feature_fields,
+                        label_field,
+                        gis_join
+                    )
                 )
-            )
-            evaluation_metrics.append(metric)
-            model_path: str = f"{models_dir}/{gis_join}.tf"
-            model.save(model_path)
-            info(f"Saved model {model_path}")
+
+            for future in as_completed(executors_list):
+                result = future.result()
+                metric: EvaluationMetric = EvaluationMetric(
+                    training_loss=result["training_loss"],
+                    validation_loss=result["validation_loss"],
+                    true_loss=result["true_loss"],
+                    duration_sec=result["duration_sec"],
+                    error_occurred=False,
+                    error_message="",
+                    gis_join_metadata=GisJoinMetadata(
+                        gis_join=result["gis_join"],
+                        count=result["count"]
+                    )
+                )
+                evaluation_metrics.append(metric)
+
+                # result: dict = build_and_train_model(
+                #     job_id=request.id,
+                #     hyper_params=hyper_params,
+                #     feature_fields=feature_fields,
+                #     label_field=label_field,
+                #     gis_join=gis_join,
+                # )
+
             count += 1
-            gis_join_timer.reset()
 
         info(f"Finished training {count-1}/{len(request.gis_joins)} models. Returning results...")
         worker_timer.stop()
@@ -211,7 +179,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 reloaded_model = tf.keras.models.load_model(saved_model_dir_path)
                 reloaded_model.summary()
 
-                features_df = pd.read_csv(f"/tmp/model_service/{gis_join}.csv", header=0)
+                features_df = pd.read_csv(f"/tmp/model_service/{gis_join}.csv", header=0).drop("GISJOIN", 1)
                 allocation: int = len(features_df.index)
                 info(f"Loaded Pandas DataFrame from CSV of size {allocation}")
 
@@ -289,6 +257,90 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             filename=f"{gis_join}.tf.zip",
             data=fileContents
         )
+
+
+def build_and_train_model(job_id: str,
+                          hyper_params: dict,
+                          feature_fields: list,
+                          label_field: str,
+                          gis_join: str) -> dict:
+    timer: Timer = Timer()
+    timer.start()
+    optimizer = tf.keras.optimizers.Adam(hyper_params["learning_rate"])
+    loss = "mean_squared_error"
+
+    # Load data
+    csv_path: str = f"/tmp/model_service/{gis_join}.csv"
+    all_df: pd.DataFrame = pd.read_csv(csv_path, header=0).drop("GISJOIN", 1)
+    len_df: int = len(all_df.index)
+    info(f"Loaded data for GISJOIN {gis_join}: {len_df} records")
+    if hyper_params["normalize_inputs"]:
+        scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(all_df)
+        all_df = pd.DataFrame(scaled, columns=all_df.columns)
+
+    features = all_df[feature_fields]
+    labels = all_df[label_field]
+
+    # Create Sequential model
+    model = tf.keras.Sequential()
+
+    # Add input layer
+    model.add(tf.keras.Input(shape=(len(feature_fields))))
+
+    # Add hidden layers
+    hidden_layers = hyper_params["hidden_layers"]
+    for hidden_layer in hidden_layers:
+        name: str = hidden_layer["name"]
+        units: int = hidden_layer["units"]
+        activation = "relu"
+        model.add(tf.keras.layers.Dense(units=units, activation=activation, name=name))
+
+    # Add output layer
+    model.add(tf.keras.layers.Dense(units=1, name="output_layer"))
+
+    # Compile the model and print its summary
+    model.compile(loss=loss, optimizer=optimizer)
+    model.summary()
+
+    # Fit the model to the data
+    history = model.fit(
+        x=features,
+        y=labels,
+        batch_size=hyper_params["batch_size"],
+        epochs=hyper_params["epochs"],
+        validation_split=hyper_params["test_split"]
+    )
+    hist = pd.DataFrame(history.history)
+    hist["epoch"] = history.epoch
+    info(hist)
+
+    # Predict on all inputs
+    y_pred = model.predict(features, verbose=1)
+    y_true = np.array(labels).reshape(-1, 1)
+    squared_residuals = np.square(y_true - y_pred)
+    m = np.mean(squared_residuals, axis=0)[0]
+    true_loss = m
+
+    last_row = hist.loc[hist["epoch"] == hyper_params["epochs"] - 1].values[0]
+    training_loss = last_row[0]
+    validation_loss = last_row[1]
+    info(f"Training loss: {training_loss}, validation loss: {validation_loss}")
+
+    # Save model
+    model_path: str = f"/tmp/model_service/{job_id}/{gis_join}.tf"
+    model.save(model_path)
+    info(f"Saved model {model_path}")
+
+    timer.stop()
+    return {
+        "training_loss": training_loss,
+        "validation_loss": validation_loss,
+        "true_loss": true_loss,
+        "gis_join": gis_join,
+        "count": len_df,
+        "duration_sec": timer.elapsed
+    }
+
 
 
 # Returns a dictionary of { gis_join }
