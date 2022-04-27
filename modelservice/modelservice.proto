@@ -10,6 +10,9 @@ service Master {
   // Queries the built models by spatial extent
   rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 
+  // Validates a set of already-built models
+  rpc ValidateModels (ValidateModelsRequest) returns (ValidateModelsResponse) {}
+
   // Registers a Worker to track
   rpc RegisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
 
@@ -21,6 +24,9 @@ service Worker {
 
   // Builds models at the worker level by training/testing on queried data
   rpc BuildModels (BuildModelsRequest) returns (WorkerBuildModelsResponse) {}
+
+  // Validates models under an id
+  rpc ValidateModels (ValidateModelsRequest) returns (ValidateModelsResponse) {}
 
   // Queries the local built models at the worker level
   rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
@@ -51,6 +57,15 @@ message WorkerBuildModelsResponse {
   bool error_occurred = 4;
   string error_msg = 5;
   repeated EvaluationMetric validation_metrics = 6;
+}
+
+message ValidateModelsRequest {
+  string id = 1;
+}
+
+message ValidateModelsResponse {
+  string id = 1;
+  repeated EvaluationMetric validation_metrics = 2;
 }
 
 message GetModelRequest {

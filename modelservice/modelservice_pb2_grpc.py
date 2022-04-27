@@ -26,6 +26,11 @@ class MasterStub(object):
                 request_serializer=modelservice__pb2.GetModelRequest.SerializeToString,
                 response_deserializer=modelservice__pb2.GetModelResponse.FromString,
                 )
+        self.ValidateModels = channel.unary_unary(
+                '/Master/ValidateModels',
+                request_serializer=modelservice__pb2.ValidateModelsRequest.SerializeToString,
+                response_deserializer=modelservice__pb2.ValidateModelsResponse.FromString,
+                )
         self.RegisterWorker = channel.unary_unary(
                 '/Master/RegisterWorker',
                 request_serializer=modelservice__pb2.WorkerRegistrationRequest.SerializeToString,
@@ -57,6 +62,13 @@ class MasterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ValidateModels(self, request, context):
+        """Validates a set of already-built models
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def RegisterWorker(self, request, context):
         """Registers a Worker to track
         """
@@ -83,6 +95,11 @@ def add_MasterServicer_to_server(servicer, server):
                     servicer.GetModel,
                     request_deserializer=modelservice__pb2.GetModelRequest.FromString,
                     response_serializer=modelservice__pb2.GetModelResponse.SerializeToString,
+            ),
+            'ValidateModels': grpc.unary_unary_rpc_method_handler(
+                    servicer.ValidateModels,
+                    request_deserializer=modelservice__pb2.ValidateModelsRequest.FromString,
+                    response_serializer=modelservice__pb2.ValidateModelsResponse.SerializeToString,
             ),
             'RegisterWorker': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterWorker,
@@ -141,6 +158,23 @@ class Master(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def ValidateModels(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Master/ValidateModels',
+            modelservice__pb2.ValidateModelsRequest.SerializeToString,
+            modelservice__pb2.ValidateModelsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def RegisterWorker(request,
             target,
             options=(),
@@ -189,6 +223,11 @@ class WorkerStub(object):
                 request_serializer=modelservice__pb2.BuildModelsRequest.SerializeToString,
                 response_deserializer=modelservice__pb2.WorkerBuildModelsResponse.FromString,
                 )
+        self.ValidateModels = channel.unary_unary(
+                '/Worker/ValidateModels',
+                request_serializer=modelservice__pb2.ValidateModelsRequest.SerializeToString,
+                response_deserializer=modelservice__pb2.ValidateModelsResponse.FromString,
+                )
         self.GetModel = channel.unary_unary(
                 '/Worker/GetModel',
                 request_serializer=modelservice__pb2.GetModelRequest.SerializeToString,
@@ -201,6 +240,13 @@ class WorkerServicer(object):
 
     def BuildModels(self, request, context):
         """Builds models at the worker level by training/testing on queried data
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ValidateModels(self, request, context):
+        """Validates models under an id
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -220,6 +266,11 @@ def add_WorkerServicer_to_server(servicer, server):
                     servicer.BuildModels,
                     request_deserializer=modelservice__pb2.BuildModelsRequest.FromString,
                     response_serializer=modelservice__pb2.WorkerBuildModelsResponse.SerializeToString,
+            ),
+            'ValidateModels': grpc.unary_unary_rpc_method_handler(
+                    servicer.ValidateModels,
+                    request_deserializer=modelservice__pb2.ValidateModelsRequest.FromString,
+                    response_serializer=modelservice__pb2.ValidateModelsResponse.SerializeToString,
             ),
             'GetModel': grpc.unary_unary_rpc_method_handler(
                     servicer.GetModel,
@@ -250,6 +301,23 @@ class Worker(object):
         return grpc.experimental.unary_unary(request, target, '/Worker/BuildModels',
             modelservice__pb2.BuildModelsRequest.SerializeToString,
             modelservice__pb2.WorkerBuildModelsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ValidateModels(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Worker/ValidateModels',
+            modelservice__pb2.ValidateModelsRequest.SerializeToString,
+            modelservice__pb2.ValidateModelsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

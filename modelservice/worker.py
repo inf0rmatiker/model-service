@@ -6,6 +6,7 @@ import signal
 import tensorflow as tf
 import pandas as pd
 import shutil
+import numpy as np
 
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -16,7 +17,7 @@ from modelservice.profiler import Timer
 from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import BuildModelsRequest, GetModelRequest, GetModelResponse, GisJoinMetadata, \
     WorkerRegistrationResponse, WorkerRegistrationRequest, WorkerBuildModelsResponse, HyperParameters, OptimizerType, \
-    LossType, ActivationType, HiddenLayer, OutputLayer, EvaluationMetric
+    LossType, ActivationType, HiddenLayer, OutputLayer, EvaluationMetric, ValidateModelsRequest, ValidateModelsResponse
 
 
 class Worker(modelservice_pb2_grpc.WorkerServicer):
@@ -194,7 +195,59 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             error_msg="",
             validation_metrics=evaluation_metrics
         )
-    
+
+    def ValidateModels(self, request: ValidateModelsRequest, context) -> ValidateModelsResponse:
+        info(f"Received request to validate all models on disk for id={request.id}")
+        models_dir = f"/tmp/model_service/{request.id}"
+
+        evaluation_metrics = []
+
+        for file_or_dir in os.listdir(models_dir):
+            if file_or_dir.endswith(".tf"):
+                saved_model_dir_path = f"{models_dir}/{file_or_dir}"
+                gis_join = file_or_dir[:-3]
+                info(f"Validating SavedModel for gis_join={gis_join}...")
+
+                reloaded_model = tf.keras.models.load_model(saved_model_dir_path)
+                reloaded_model.summary()
+
+                features_df = pd.read_csv(f"/tmp/model_service/{gis_join}.csv", header=0)
+                allocation: int = len(features_df.index)
+                info(f"Loaded Pandas DataFrame from CSV of size {allocation}")
+
+                scaled = MinMaxScaler(feature_range=(0, 1)).fit_transform(features_df)
+                features_df = pd.DataFrame(scaled, columns=features_df.columns)
+                info(f"Normalized Pandas DataFrame")
+
+                # Pop the label column off into its own DataFrame
+                label_df = features_df.pop("SOIL_TEMPERATURE_0_TO_01_M_BELOW_SURFACE_KELVIN")
+
+                # Get predictions
+                y_pred = reloaded_model.predict(features_df, verbose=1)
+
+                # Use labels and predictions to evaluate the model
+                y_true = np.array(label_df).reshape(-1, 1)
+
+                squared_residuals = np.square(y_true - y_pred)
+                m = np.mean(squared_residuals, axis=0)[0]
+                loss = m
+                info(f"Loss for GISJOIN {gis_join}: {loss}")
+
+                evaluation_metrics.append(
+                    EvaluationMetric(
+                        validation_loss=loss,
+                        gis_join_metadata=GisJoinMetadata(
+                            gis_join=gis_join
+                        )
+                    )
+                )
+
+        info("Finished evaluation. Returning results")
+        return ValidateModelsResponse(
+            id=request.id,
+            validation_metrics=evaluation_metrics
+        )
+
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
         info(f"Received request to retrieve model")
 
