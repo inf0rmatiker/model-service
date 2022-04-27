@@ -9,7 +9,7 @@ import shutil
 import numpy as np
 
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from logging import info, error
 from sklearn.preprocessing import MinMaxScaler
 
@@ -113,31 +113,44 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
         os.mkdir(models_dir)
 
         count = 1
-
-        for gis_join in request.gis_joins:
-            info(f"Loading data for GISJOIN {gis_join} ({count}/{len(request.gis_joins)})...")
-            result: dict = build_and_train_model(
-                job_id=request.id,
-                hyper_params=hyper_params,
-                feature_fields=feature_fields,
-                label_field=label_field,
-                gis_join=gis_join,
-            )
-
-            metric: EvaluationMetric = EvaluationMetric(
-                training_loss=result["training_loss"],
-                validation_loss=result["validation_loss"],
-                true_loss=result["true_loss"],
-                duration_sec=result["duration_sec"],
-                error_occurred=False,
-                error_message="",
-                gis_join_metadata=GisJoinMetadata(
-                    gis_join=result["gis_join"],
-                    count=result["count"]
+        executors_list = []
+        with ProcessPoolExecutor(max_workers=8) as executor:
+            for gis_join in request.gis_joins:
+                executors_list.append(
+                    executor.submit(
+                        build_and_train_model,
+                        request.id,
+                        hyper_params,
+                        feature_fields,
+                        label_field,
+                        gis_join
+                    )
                 )
-            )
 
-            evaluation_metrics.append(metric)
+            for future in as_completed(executors_list):
+                result = future.result()
+                metric: EvaluationMetric = EvaluationMetric(
+                    training_loss=result["training_loss"],
+                    validation_loss=result["validation_loss"],
+                    true_loss=result["true_loss"],
+                    duration_sec=result["duration_sec"],
+                    error_occurred=False,
+                    error_message="",
+                    gis_join_metadata=GisJoinMetadata(
+                        gis_join=result["gis_join"],
+                        count=result["count"]
+                    )
+                )
+                evaluation_metrics.append(metric)
+
+                # result: dict = build_and_train_model(
+                #     job_id=request.id,
+                #     hyper_params=hyper_params,
+                #     feature_fields=feature_fields,
+                #     label_field=label_field,
+                #     gis_join=gis_join,
+                # )
+
             count += 1
 
         info(f"Finished training {count-1}/{len(request.gis_joins)} models. Returning results...")
