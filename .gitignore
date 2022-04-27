@@ -133,5 +133,8 @@ dmypy.json
 .idea/
 
 bin/
+!cluster_scripts/monitoring/omniscient/bin/
 lib64
 pyvenv.cfg
+
+nohup.out

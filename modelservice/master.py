@@ -8,7 +8,8 @@ from logging import info, error
 from modelservice.profiler import Timer
 from modelservice import modelservice_pb2_grpc
 from modelservice.modelservice_pb2 import WorkerRegistrationRequest, WorkerRegistrationResponse, BuildModelsRequest, \
-    GetModelRequest, GetModelResponse, BuildModelsResponse, WorkerBuildModelsResponse
+    GetModelRequest, GetModelResponse, BuildModelsResponse, WorkerBuildModelsResponse, ValidateModelsRequest, \
+    ValidateModelsResponse
 
 
 class WorkerMetadata:
@@ -89,6 +90,20 @@ class Master(modelservice_pb2_grpc.MasterServicer):
             worker_responses=worker_responses
         )
 
+    def ValidateModels(self, request: ValidateModelsRequest, context) -> ValidateModelsResponse:
+        info(f"Received request to validate models: {request}")
+
+        # known_workers: list = list(self.tracked_workers.values())
+        # worker_responses: list = submit_validation_worker_jobs(known_workers, request)
+        # all_evaluation_metrics = []
+        # for worker_response in worker_responses:
+        #
+        #
+        # info(f"Jobs completed, returning results")
+        return ValidateModelsResponse(
+            id=request.id
+        )
+
     def GetModel(self, request: GetModelRequest, context) -> GetModelResponse:
         info(f"Received request to retrieve model")
 
@@ -131,6 +146,34 @@ def submit_worker_jobs(workers: list, request: BuildModelsRequest) -> list:
             request_copy.CopyFrom(_request)
             request_copy.gis_joins.extend(_worker.gis_joins)
             return await stub.BuildModels(request_copy)
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    tasks: list = []  # list of concurrent.Futures
+    for worker in workers:
+        tasks.append(
+            loop.create_task(
+                run_worker_job(worker, request)
+            )
+        )
+
+    task_group = asyncio.gather(*tasks)
+    responses = loop.run_until_complete(task_group)
+    loop.close()  # Clean up event loop we created earlier
+    return list(responses)
+
+
+# Asynchronously submits Worker jobs, and returns a list(WorkerBuildModelsResponse)
+def submit_validation_worker_jobs(workers: list, request: ValidateModelsRequest) -> list:
+    info(f"Submitting jobs to {len(workers)} Workers")
+
+    # Define async function for launching a BuildModels job on a Worker gRPC stub
+    async def run_worker_job(_worker: WorkerMetadata, _request: ValidateModelsRequest) -> ValidateModelsResponse:
+        info(f"Launching async submit_validation_worker_jobs() for {_worker.hostname}...")
+        async with grpc.aio.insecure_channel(f"{_worker.hostname}:{_worker.port}") as channel:
+            stub = modelservice_pb2_grpc.WorkerStub(channel)
+            return await stub.ValidateModels(_request)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

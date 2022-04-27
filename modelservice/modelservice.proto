@@ -10,6 +10,9 @@ service Master {
   // Queries the built models by spatial extent
   rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 
+  // Validates a set of already-built models
+  rpc ValidateModels (ValidateModelsRequest) returns (ValidateModelsResponse) {}
+
   // Registers a Worker to track
   rpc RegisterWorker (WorkerRegistrationRequest) returns (WorkerRegistrationResponse) {}
 
@@ -21,6 +24,9 @@ service Worker {
 
   // Builds models at the worker level by training/testing on queried data
   rpc BuildModels (BuildModelsRequest) returns (WorkerBuildModelsResponse) {}
+
+  // Validates models under an id
+  rpc ValidateModels (ValidateModelsRequest) returns (ValidateModelsResponse) {}
 
   // Queries the local built models at the worker level
   rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
@@ -51,6 +57,15 @@ message WorkerBuildModelsResponse {
   bool error_occurred = 4;
   string error_msg = 5;
   repeated EvaluationMetric validation_metrics = 6;
+}
+
+message ValidateModelsRequest {
+  string id = 1;
+}
+
+message ValidateModelsResponse {
+  string id = 1;
+  repeated EvaluationMetric validation_metrics = 2;
 }
 
 message GetModelRequest {
@@ -92,16 +107,17 @@ message GisJoinMetadata {
 
 message HyperParameters {
   int32 epochs = 1;
-  float learning_rate = 2;
-  bool normalize_inputs = 3;
-  float train_split = 4;  // Fraction of data to use as training data. Default = 0.8
-  OptimizerType optimizer_type = 5;
-  LossType loss_type = 6;
+  int32 batch_size = 2;
+  float learning_rate = 3;
+  bool normalize_inputs = 4;
+  float train_split = 5;  // Fraction of data to use as training data. Default = 0.8
+  OptimizerType optimizer_type = 6;
+  LossType loss_type = 7;
 
   // Model specification
-  InputLayer input_layer = 7;
-  repeated HiddenLayer hidden_layers = 8;
-  OutputLayer output_layer = 9;
+  InputLayer input_layer = 8;
+  repeated HiddenLayer hidden_layers = 9;
+  OutputLayer output_layer = 10;
 }
 
 message InputLayer {

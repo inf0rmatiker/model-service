@@ -1,0 +1,63 @@
+#!/bin/bash
+
+VERSION="0.1.0"
+
+USAGE="USAGE $(basename "$0") <COMMAND> [ARGS...]
+COMMANDS:
+    collect <monitor-id> <directory>    retrieve and compile monitor results.
+    help                                display this menu.
+    init                                initialize environment DEPRECATED.
+    list                                list all monitors.
+    remove <monitor-id>                 remove a monitor.
+    start                               start a monitor.
+    stop <monitor-id>                   stop a monitor.
+    cleanup                             clean up omni logs/directories.
+    version                             print application version."
+
+export USAGE
+
+HOST_ID=$(echo $(hostname) | cut -d'-' -f 2)
+
+# compute instance variables
+export OMNI_DIR="$HOME/model-service/cluster_scripts/monitoring/omniscient"
+export SCRIPT_DIR="$OMNI_DIR/sbin"
+export HOST_FILE="$OMNI_DIR/etc/hosts.txt"
+export CONFIG_FILE="$OMNI_DIR/etc/config.sh"
+export NMON_CMD="$OMNI_DIR/bin/nmon"
+
+source "$CONFIG_FILE"
+
+# execute command
+case "$1" in
+    collect)
+        "$SCRIPT_DIR/collect.sh" "${@:2}"
+        ;;
+    help)
+        echo "$USAGE"
+        ;;
+    init)
+        "$SCRIPT_DIR/init.sh" "${@:2}"
+        ;;
+    list)
+        "$SCRIPT_DIR/list.sh" "${@:2}"
+        ;;
+    remove)
+        "$SCRIPT_DIR/remove.sh" "${@:2}"
+        ;;
+    start)
+        "$SCRIPT_DIR/start.sh" "${@:2}"
+        ;;
+    stop)
+        "$SCRIPT_DIR/stop.sh" "${@:2}"
+        ;;
+    cleanup)
+        "$SCRIPT_DIR/cleanup.sh" "${@:2}"
+        ;;
+    VERSION)
+        echo "v$VERSION"
+        ;;
+    *)
+        echo "$USAGE"
+        exit 1
+        ;;
+esac

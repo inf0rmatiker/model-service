@@ -1,0 +1,11 @@
+ant /tmp/omniscient
+antlion /tmp/omniscient
+aphid /tmp/omniscient
+assassin-bug /tmp/omniscient
+bee /tmp/omniscient
+centipede /tmp/omniscient
+cockroach /tmp/omniscient
+cricket /tmp/omniscient
+damselfly /tmp/omniscient
+deer-fly /tmp/omniscient
+dragonfly /tmp/omniscient
