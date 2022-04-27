@@ -211,7 +211,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
                 reloaded_model = tf.keras.models.load_model(saved_model_dir_path)
                 reloaded_model.summary()
 
-                features_df = pd.read_csv(f"/tmp/model_service/{gis_join}.csv", header=0)
+                features_df = pd.read_csv(f"/tmp/model_service/{gis_join}.csv", header=0).drop("GISJOIN", 1)
                 allocation: int = len(features_df.index)
                 info(f"Loaded Pandas DataFrame from CSV of size {allocation}")
 
