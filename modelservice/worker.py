@@ -148,8 +148,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             # Add output layer
             output_layer: OutputLayer = hyper_parameters.output_layer
             name: str = output_layer.name
-            activation = "relu"
-            model.add(tf.keras.layers.Dense(units=1, activation=activation, name=name))
+            model.add(tf.keras.layers.Dense(units=1, name=name))
 
             # Compile the model and print its summary
             model.compile(loss=loss, optimizer=optimizer)
@@ -161,6 +160,13 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             hist["epoch"] = history.epoch
             info(hist)
 
+            # Predict on all inputs
+            y_pred = model.predict(features, verbose=1)
+            y_true = np.array(labels).reshape(-1, 1)
+            squared_residuals = np.square(y_true - y_pred)
+            m = np.mean(squared_residuals, axis=0)[0]
+            true_loss = m
+
             last_row = hist.loc[hist["epoch"] == epochs - 1].values[0]
             training_loss = last_row[0]
             validation_loss = last_row[1]
@@ -170,6 +176,7 @@ class Worker(modelservice_pb2_grpc.WorkerServicer):
             metric: EvaluationMetric = EvaluationMetric(
                 training_loss=training_loss,
                 validation_loss=validation_loss,
+                true_loss=true_loss,
                 duration_sec=gis_join_timer.elapsed,
                 error_occurred=False,
                 error_message="",
